@@ -1,9 +1,8 @@
-import os
 class BinaryFileManager:
     def __init__(self, file_path):
         self.file_path = file_path
         self.status_file =  False
-        self.file = None
+        self.file = open(file_path)
     # if file exist or not
     def check_status_file(self):
         try:
@@ -19,7 +18,6 @@ class BinaryFileManager:
         if(not self.check_status_file()):
             with open(self.file_path, 'ab') as file:    
                file.write(b'\0' * size_buffer)
-               self.file = file
         else:
             print(f'{self.file_path} already exist')
 
@@ -28,12 +26,9 @@ class BinaryFileManager:
         with open(self.file_path, 'r+b') as file:
             file.seek(position)
             file.write(data)
-            self.file = file
-            
 
     def read_binary_data(self, position, size_buffer):
         with open(self.file_path, 'rb') as file:
             file.seek(position)
             data = file.read(size_buffer)
-            self.file = file
             return data
