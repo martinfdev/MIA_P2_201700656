@@ -1,28 +1,33 @@
+import os
 class BinaryFileManager:
     def __init__(self, file_path):
         self.file_path = file_path
-        self.exist_file =  False
+        self.status_file =  False
 
     # if file exist or not
-    def exist_file(self):
+    def check_status_file(self):
         try:
-            open(self.file_path, 'x')
-            self.exist_file = True
+            open(self.file_path, 'r')
+            self.status_file = True
         except IOError:
-            self.exist_file = False
-        return self.exist_file
+            print(f'{self.file_path} does not exist')
+            self.status_file = False
+        return self.status_file
 
-    # fill binary file wiht data '\0'
+    # fill binary file wiht data '\0' buffer
     def fill_binary_file(self, size_buffer):
-        if(self.exist_file(self.file_path)):
+        if(not self.check_status_file()):
             with open(self.file_path, 'ab') as file:    
-                pass
+               file.write(b'\0' * size_buffer)
+        else:
+            print(f'{self.file_path} already exist')
 
-    def write_binary_data(self, data):
-        with open(self.file_path, 'wb') as file:
+
+    def write_binary_data(self, data, position):
+        with open(self.file_path, 'w+b') as file:
             file.write(data)
             
 
-    def read_binary_data(self):
+    def read_binary_data(self, buffet, postion):
         with open(self.file_path, 'rb') as file:
             return file.read()
