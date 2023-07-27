@@ -16,4 +16,4 @@ After create folder activate the virtual environment whit next command
 source venv/bin/activate 
 ```
 
-Donwnload ply[!(http://www.dabeaz.com/ply/)] and add project source
+Donwnload [ply](http://www.dabeaz.com/ply) and add project source
