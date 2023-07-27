@@ -16,9 +16,4 @@ After create folder activate the virtual environment whit next command
 source venv/bin/activate 
 ```
 
-Now install PLY for the interpreter
-
-```bash
-#!/bin/bash
-pip install ply 
-``
+Donwnload ply[!(http://www.dabeaz.com/ply/)] and add project source
