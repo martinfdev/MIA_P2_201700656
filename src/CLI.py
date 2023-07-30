@@ -1,6 +1,7 @@
 import ply.lex as lex
 import ply.yacc as yacc
-
+from src.Functions import Functions
+from src.Exec import Exec
 # reserve words
 reserve ={
     'exec': 	'EXEC',
@@ -44,7 +45,7 @@ def t_PATH(t):
     return t
 
 def t_FILENAME(t):
-    r'[a-zA-Z0-9_]+\.bin' 
+    r'[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+' 
     return t
 
 # def t_STRING(t):
@@ -107,7 +108,8 @@ def p_instruction(t):
 
 def p_exec_instruction(t):
     '''exec_instruction :   EXEC PATH FILENAME'''
-    print(t[2]+" "+t[3])
+    t[0] = Exec().read_file(t[2]+t[3])
+    # print(t[2]+" "+t[3])
 
 
 def p_mkdisk_instruction(t):
@@ -126,4 +128,4 @@ def cli_command(command):
     input = command
     lexer = lex.lex()
     parser = yacc.yacc()
-    parser.parse(command)
+    return parser.parse(command)[0]
