@@ -1,4 +1,4 @@
 
 run:
-	@echo "Running main.py"
+	@echo "Running ..."
 	python main.py
