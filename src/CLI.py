@@ -7,14 +7,18 @@ reserve ={
     'exec': 	'EXEC',
     'mkdisk':   'MKDISK',
     'fdisk':    'FDISK',
+    'size':     'SIZE',
+    'fit':      'FIT',
+    'unit':     'UNIT',
+    'path':     'PATH', 
 }
 
 tokens = [
     'ID',
     'STRING',
     'NUMBER',
-    'PATH',
     'FILENAME',
+    'PATH_DIRECTORY',
     'EQUALTO', # =
     'DASH',  # -
 ]+list(reserve.values())
@@ -40,7 +44,7 @@ def t_INTNUM(t):
         t.value = 0
     return t
 
-def t_PATH(t):
+def t_PATH_DIRECTORY(t):
     r'\/[a-zA-Z0-9_\/]*\/'
     return t
 
@@ -106,10 +110,20 @@ def p_instruction(t):
     '''
     t[0] = t[1]
 
+def p_instruction_error_0(t):
+    '''
+        instruction :   error
+    '''
+    # error.append(Exception("Sintáctico","Error Sintáctico " + str(t[1].value) , t.lineno(1), find_column(input, t.slice[1])))
+    print("Error Sintáctico " + str(t[1].value) + " line: " + str(t.lineno(1)) + " column: " + str(find_column(input, t.slice[1])))
+    t[0] = ""
+
+
+
 def p_exec_instruction(t):
-    '''exec_instruction :   EXEC PATH FILENAME'''
-    t[0] = Exec().read_file(t[2]+t[3])
-    # print(t[2]+" "+t[3])
+    '''exec_instruction :   EXEC PATH EQUALTO PATH_DIRECTORY FILENAME'''
+    t[0] = Exec().read_file(t[4]+t[5])
+    # print(t[4]+" "+t[5])
 
 
 def p_mkdisk_instruction(t):
@@ -122,10 +136,21 @@ def p_fdisk_instruction(t):
     print(t[2])
     t[0] = t[1]
 
+# def p_error(t):
+#     if t:
+#         print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {}".format(
+#             str(t.type), str(t.value)))
+#     else:
+#         print(Functions().RED+"Error"+Functions().RESET +" sintactico {}".format(t))
+
+
 input = ''
 def cli_command(command):
     # construct to lexer analyzer
     input = command
     lexer = lex.lex()
     parser = yacc.yacc()
-    return parser.parse(command)[0]
+    output = parser.parse(command)
+    if output == None:
+        return ""
+    else: return output[0]
