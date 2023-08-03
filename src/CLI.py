@@ -114,7 +114,6 @@ def p_instruction_error_0(t):
     '''
         instruction :   error
     '''
-    # error.append(Exception("Sintáctico","Error Sintáctico " + str(t[1].value) , t.lineno(1), find_column(input, t.slice[1])))
     print("Error Sintáctico " + str(t[1].value) + " line: " + str(t.lineno(1)) + " column: " + str(find_column(input, t.slice[1])))
     t[0] = ""
 
