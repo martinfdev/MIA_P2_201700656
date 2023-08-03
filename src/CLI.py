@@ -49,7 +49,7 @@ def t_PATH_DIRECTORY(t):
     return t
 
 def t_FILENAME(t):
-    r'[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+' 
+    r'[a-zA-Z0-9_]+\.(txt|dsk)' 
     return t
 
 # def t_STRING(t):
@@ -74,7 +74,7 @@ def t_newline(t):
 def t_error(t):
     # error.append(Exception('Lexico', 'Error Lexico: ' +
     #              t.value[0], t.lineno, find_column(input, t)))
-    print('Error Lexico: '+t.value[0]+' line: '+str(t.lineno)+' column: '+str(find_column(input, t)))
+    print(f'{Functions().RED}Error Lexico: {Functions().RESET}'+t.value[0]+' line: '+str(t.lineno)+' column: '+str(find_column(input, t)))
     t.lexer.skip(1)
 
 def find_column(input, token):
@@ -114,7 +114,7 @@ def p_instruction_error_0(t):
     '''
         instruction :   error
     '''
-    print("Error Sintáctico " + str(t[1].value) + " line: " + str(t.lineno(1)) + " column: " + str(find_column(input, t.slice[1])))
+    print(f"{Functions().RED}Error Sintáctico {Functions().RESET}" + str(t[1].value) + " line: " + str(t.lineno(1)) + " column: " + str(find_column(input, t.slice[1])))
     t[0] = ""
 
 
@@ -151,5 +151,7 @@ def cli_command(command):
     parser = yacc.yacc()
     output = parser.parse(command)
     if output == None:
+        return ""
+    elif  output == []:
         return ""
     else: return output[0]
