@@ -21,9 +21,9 @@ class Functions:
         return time_s
 
     def err_msg(self, command, message):
-        print(f"{self.RED}ERROR {command}: {self.YELLOW}{message}")
+        print(f"{self.RED}ERROR {command}: {self.YELLOW}{message} {self.RESET}")
         # print(f"{self.RED}USAGE: {command}")
         # print(f"{self.RED}EXAMPLE: {command} 100")
 
     def success_msg(self, command, message):
-        print(f"{self.GREEN}SUCCESS {command}: {self.BLUE}{message}")    
+        print(f"{self.GREEN}SUCCESS {command}: {self.BLUE}{message} {self.RESET}")    
