@@ -12,7 +12,7 @@ class Path:
         self.path = path
         self.filename = filename
         
-    def __str__(self):
+    def get_value(self):
         if self.path == None:
             return ""
         return self.path + self.filename
