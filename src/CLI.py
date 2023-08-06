@@ -2,22 +2,25 @@ import ply.lex as lex
 import ply.yacc as yacc
 from src.Functions import Functions
 from src.Exec import Exec
+from src.Primitive import *
+import re
 # reserve words
 reserve ={
     'exec': 	'EXEC',
     'mkdisk':   'MKDISK',
     'fdisk':    'FDISK',
+    'path':     'PATH', 
     'size':     'SIZE',
     'fit':      'FIT',
     'unit':     'UNIT',
-    'path':     'PATH', 
 }
 
 tokens = [
     'ID',
-    'STRING',
-    'NUMBER',
     'FILENAME',
+    'DECIMALNUM',
+    'INTNUM',
+    'STRING',
     'PATH_DIRECTORY',
     'EQUALTO', # =
     'DASH',  # -
@@ -52,17 +55,15 @@ def t_FILENAME(t):
     r'[a-zA-Z0-9_]+\.(txt|dsk)' 
     return t
 
-# def t_STRING(t):
-#     r'"[^"]*"'
-#     t.value = t.value[1:-1]
-#     return t
-
+def t_STRING(t):
+    r'"[^"]*"'
+    t.value = t.value[1:-1]
+    return t
 
 def t_ID(t):
     r'[a-zA-Z][a-zA-Z_0-9]*'
     t.type = reserve.get(t.value.lower(), 'ID')    # Check for reserved words
     return t
-
 
 # ignore character
 t_ignore = ' \t\r'
@@ -81,7 +82,7 @@ def find_column(input, token):
     line_start = input.rfind('\n', 0, token.lexpos)+1
     return (token.lexpos - line_start) + 1
 
-#sintax grammar-----------------------------------------------------------------------
+#-----------------------------------------------------------------------sintax grammar-----------------------------------------------------------------------
 def p_init(t):
     '''init :   instructions'''
     t[0] = t[1]
@@ -106,7 +107,6 @@ def p_instruction(t):
     instruction :   exec_instruction
                 |   mkdisk_instruction
                 |   fdisk_instruction
-    
     '''
     t[0] = t[1]
 
@@ -117,24 +117,57 @@ def p_instruction_error_0(t):
     print(f"{Functions().RED}Error Sintáctico {Functions().RESET}" + str(t[1].value) + " line: " + str(t.lineno(1)) + " column: " + str(find_column(input, t.slice[1])))
     t[0] = ""
 
-
-
 def p_exec_instruction(t):
-    '''exec_instruction :   EXEC PATH EQUALTO PATH_DIRECTORY FILENAME'''
-    t[0] = Exec().read_file(t[4]+t[5])
+    '''exec_instruction :   EXEC DASH path_eq_pathdir'''
+    t[0] = Exec(t[3]).read_file()
     # print(t[4]+" "+t[5])
 
-
 def p_mkdisk_instruction(t):
-    '''mkdisk_instruction : MKDISK ID'''
-    print(t[2])
-    t[0] = t[1]
+    '''mkdisk_instruction  : MKDISK ls_params_mkdisk'''
+    t[0] = [t[1], t[2]]
+
+def p_ls_params_mkdisk(t):
+    '''ls_params_mkdisk     :   ls_params_mkdisk param_mkdisk
+                            |   param_mkdisk'''
+    if len(t) == 3:
+        t[1].append(t[2])
+        t[0] = t[1]
+    else:
+        t[0] = [t[1]]
+
+def p_param_mkdisk(t):
+    '''param_mkdisk :   DASH size_eq_intnum
+                    |   DASH path_eq_pathdir
+                    |   DASH fit_eq_id
+                    |   DASH unit_eq_unit'''
+    t[0] = t[2]
 
 def p_fdisk_instruction(t):
     '''fdisk_instruction :  FDISK ID'''
     print(t[2])
     t[0] = t[1]
 
+def p_path_eq_pathdir(t):
+    '''path_eq_pathdir  : PATH EQUALTO PATH_DIRECTORY FILENAME
+                        | PATH EQUALTO STRING'''
+    if len(t) == 5:
+        t[0] = Path(t[3], t[4])
+    else:
+        regex = r'\/(["\'])([a-zA-Z0-9_\/\s]+\.dsk|\.txt)\1'
+        file_name = re.search(regex, t[3])
+        t[0] = Path(t[3], file_name)    
+
+def p_size_eq_intnum(t):
+    '''size_eq_intnum : SIZE EQUALTO INTNUM'''
+    t[0] = Size(t[3])
+
+def p_fit_eq_id(t):
+    '''fit_eq_id : FIT EQUALTO ID'''
+    t[0] = Fit(t[3])
+
+def p_unit_eq_id(t):
+    '''unit_eq_unit : UNIT EQUALTO ID'''
+    t[0] = Unit(t[3])
 # def p_error(t):
 #     if t:
 #         print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {}".format(
