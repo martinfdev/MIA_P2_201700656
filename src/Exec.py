@@ -9,7 +9,6 @@ class Exec:
             Functions().err_msg("EXEC", "no se ha especificado el archivo")
             return ""
         path = self.path_file.get_value()
-        print(path)
         try:
             with open(path, "r") as file:
                 content_txt_file =  file.read()
