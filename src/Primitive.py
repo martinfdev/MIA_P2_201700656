@@ -23,7 +23,7 @@ class Fit:
 
     def get_value(self):
         if self.value == None:
-            return "FF"
+            return None
         return str.upper(self.value) #return value in uppercase
 
 class Unit:
@@ -32,5 +32,5 @@ class Unit:
 
     def get_value(self):
         if self.value == None:
-            return "M"
+            return None
         return str.upper(self.value) #return value in uppercase    
