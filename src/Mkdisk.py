@@ -13,15 +13,6 @@ class Mkdisk:
     def create_disk(self):
         if not self._set_values():
             Functions().err_msg("MKDISK", "No se pudo crear el disco "+Functions().CYAN+self._file_name)
-
-
-
-
-    def _set_const_values(self):
-        if self._unit == "K":
-            self._size = self._size * 1024
-        elif self._unit == "M":
-            self._size = self._size * 1024 * 1024
                 
     def _set_values(self):
         for param in self._list_params:
