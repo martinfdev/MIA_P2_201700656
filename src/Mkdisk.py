@@ -41,3 +41,9 @@ class Mkdisk:
             Functions().err_msg("MKDISK", "El parámetro FIT solo puede ser BF, FF o WF");
             return False
         return True
+    
+    def _set_const_values(self):
+        if self._unit == "K":
+            self._size = self._size * 1024
+        elif self._unit == "M":
+            self._size = self._size * 1024 * 1024
