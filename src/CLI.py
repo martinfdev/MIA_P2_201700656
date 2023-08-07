@@ -4,6 +4,7 @@ from src.Functions import Functions
 from src.Exec import Exec
 from src.Primitive import *
 import re
+from src.Mkdisk import Mkdisk
 # reserve words
 reserve ={
     'exec': 	'EXEC',
@@ -124,7 +125,8 @@ def p_exec_instruction(t):
 
 def p_mkdisk_instruction(t):
     '''mkdisk_instruction  : MKDISK ls_params_mkdisk'''
-    t[0] = [t[1], t[2]]
+    Mkdisk(t[2]).create_disk()
+    t[0] = ""
 
 def p_ls_params_mkdisk(t):
     '''ls_params_mkdisk     :   ls_params_mkdisk param_mkdisk
@@ -153,9 +155,15 @@ def p_path_eq_pathdir(t):
     if len(t) == 5:
         t[0] = Path(t[3], t[4])
     else:
-        regex = r'\/(["\'])([a-zA-Z0-9_\/\s]+\.dsk|\.txt)\1'
-        file_name = re.search(regex, t[3])
-        t[0] = Path(t[3], file_name)    
+        directory_regex = r'\/[a-zA-Z0-9_ !\/]*\/'
+        file_name_regex = r"/([^/]+)$"
+        file_name = re.search(file_name_regex, t[3])
+        directory = re.search(directory_regex, t[3])
+        if file_name == None:
+            raise Exception("Error Sintáctico: Path inválido")
+        elif directory == None:
+            raise Exception("Error Sintáctico: Path inválido")
+        t[0] = Path(directory.group(0), file_name.group(1))    
 
 def p_size_eq_intnum(t):
     '''size_eq_intnum : SIZE EQUALTO INTNUM'''
