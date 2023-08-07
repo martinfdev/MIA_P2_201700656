@@ -1,6 +1,7 @@
 import random
 import math
 import datetime
+import pickle
 class Functions:
     def __init__(self):
         self.RESET = '\033[0m'
@@ -17,7 +18,6 @@ class Functions:
 
     def time_stamp_obj(self):
         time_s = datetime.datetime.now()
-        print(time_s.day)
         return time_s
 
     def err_msg(self, command, message):
@@ -26,4 +26,17 @@ class Functions:
         # print(f"{self.RED}EXAMPLE: {command} 100")
 
     def success_msg(self, command, message):
-        print(f"{self.GREEN}SUCCESS {command}: {self.BLUE}{message} {self.RESET}")    
+        print(f"{self.GREEN}SUCCESS {command}: {self.BLUE}{message} {self.RESET}")
+
+    def serialize(self, obj, path):
+            return pickle.dumps(obj)
+
+    def deserialize(self, file, seekpointer):
+        try:
+            with open(file, "rb") as f:
+                f.seek(seekpointer)
+                return pickle.loads(f.read())
+        except: 
+            print(f'{Functions().RED}Error {Functions().RESET}al abrir el archivo {file} no de pudo deserializar el objeto')
+            return None
+      
