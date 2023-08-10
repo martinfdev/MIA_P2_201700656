@@ -22,6 +22,8 @@ tokens = [
     'DECIMALNUM',
     'INTNUM',
     'STRING',
+    'COMMENTUNTLINE',
+    'COMMENTMULTILINE',
     'PATH_DIRECTORY',
     'EQUALTO', # =
     'DASH',  # -
@@ -39,6 +41,14 @@ def t_DECIMALNUM(t):
         t.value = 0
     return t
 
+def t_COMMENTUNTLINE(t):
+    r'\#.*'
+    return t
+
+def t_COMMENTMULTILINE(t):
+    r'\/\*(.|\n)*?\*\/'
+    return t
+
 def t_INTNUM(t):
     r'\d+'
     try:
@@ -53,7 +63,7 @@ def t_PATH_DIRECTORY(t):
     return t
 
 def t_FILENAME(t):
-    r'[a-zA-Z0-9_]+\.(txt|dsk)' 
+    r'[a-zA-Z0-9_]+\.(adsj|dsk)' 
     return t
 
 def t_STRING(t):
@@ -108,6 +118,7 @@ def p_instruction(t):
     instruction :   exec_instruction
                 |   mkdisk_instruction
                 |   fdisk_instruction
+                |   print_comments
     '''
     t[0] = t[1]
 
@@ -176,6 +187,12 @@ def p_fit_eq_id(t):
 def p_unit_eq_id(t):
     '''unit_eq_unit : UNIT EQUALTO ID'''
     t[0] = Unit(t[3])
+
+def p_print_comments(t):
+    '''print_comments : COMMENTUNTLINE
+                      | COMMENTMULTILINE'''
+    print(f'{Functions().MAGENTA}{t[1]}{Functions().RESET}')
+    t[0] = ""
 # def p_error(t):
 #     if t:
 #         print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {}".format(
