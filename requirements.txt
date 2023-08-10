@@ -1,1 +1,2 @@
-keyboard==0.13.5
+graphviz==0.20.1
+ply==3.11
