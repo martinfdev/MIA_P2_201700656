@@ -10,6 +10,10 @@ class BinaryFileManager:
 
     # if file exist or not
     def check_status_file(self):
+        if not os.path.exists(self.file_path):
+            print(f'{self.file_path} no existe!')
+            self.status_file = False
+            return self.status_file
         try:
             open(self.file_path, 'r')
             self.status_file = True
@@ -20,12 +24,15 @@ class BinaryFileManager:
 
     # fill binary file wiht data '\0' buffer
     def fill_binary_file(self, size_buffer, init_position):
-        with open(self.file_path, 'ab') as file:
-            file.seek(init_position)    
-            file.write(b'\0' * size_buffer)
-            file.flush()
-            os.fsync(file.fileno())
-            file.close()
+        try:
+            with open(self.file_path, 'r+b') as file:
+                file.seek(init_position)    
+                file.write(b'\0' * size_buffer)
+                file.flush()
+                os.fsync(file.fileno())
+                file.close()
+        except IOError:
+            print(f'Error al escribir en {self.file_path}')        
 
     def write_binary_data(self, data, position):
         with open(self.file_path, 'r+b') as file:
