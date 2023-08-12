@@ -1,7 +1,7 @@
 import random
 import math
 import datetime
-import pickle
+import struct
 class Functions:
     def __init__(self):
         self.RESET = '\033[0m'
@@ -13,30 +13,40 @@ class Functions:
         self.CYAN = '\033[96m'
         self.WHITE = '\033[97m'
 
-    def random_mumber(self, init, end):
+    def get_random_mumber(self, init, end):
         return math.floor(random.uniform(init, end))
 
-    def time_stamp_obj(self):
+    #return time_stamp in value int
+    def get_time_stamp(self):
         time_s = datetime.datetime.now()
-        return time_s
+        return  int(time_s.timestamp())
+    
+    #return time_stamp in fomrat datetime
+    def get_time_stamp_obj(self, time_s):
+        return datetime.datetime.fromtimestamp(time_s)
+
+    #return string to bytes
+    def string_to_bytes(self, string):
+        return string.encode('utf-8')
+
+    #return bytes to string
+    def bytes_to_string(self, bytes):
+        return bytes.decode('utf-8')
 
     def err_msg(self, command, message):
         print(f"{self.RED}ERROR {command}: {self.YELLOW}{message} {self.RESET}")
-        # print(f"{self.RED}USAGE: {command}")
-        # print(f"{self.RED}EXAMPLE: {command} 100")
 
     def success_msg(self, command, message):
         print(f"{self.GREEN}SUCCESS {command}: {self.BLUE}{message} {self.RESET}")
 
-    def serialize(self, obj):
-            return pickle.dumps(obj)
+    def serialize(self,format, *args):
+            return struct.pack(format, *args)
 
-    def deserialize(self, file, seekpointer):
+    def deserialize(self, format, data):
         try:
-            with open(file, "rb") as f:
-                f.seek(seekpointer)
-                return pickle.loads(f.read())
-        except: 
-            print(f'{Functions().RED}Error {Functions().RESET}al abrir el archivo {file} no de pudo deserializar el objeto')
+            return struct.unpack(format, data)
+        except struct.error:
+            print(f"{self.RED}Error  {self.RESET}al deserializar", struct.error)
             return None
+
       
