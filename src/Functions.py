@@ -28,7 +28,7 @@ class Functions:
     def success_msg(self, command, message):
         print(f"{self.GREEN}SUCCESS {command}: {self.BLUE}{message} {self.RESET}")
 
-    def serialize(self, obj, path):
+    def serialize(self, obj):
             return pickle.dumps(obj)
 
     def deserialize(self, file, seekpointer):
