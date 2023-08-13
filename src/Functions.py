@@ -62,4 +62,11 @@ class Functions:
         
     def get_file_name(self, file_path):
         return os.path.basename(file_path)    
-      
+
+    def create_folder(self, folder_path):
+        try:
+            os.makedirs(folder_path)
+            return True
+        except OSError:
+            print(f'{self.RED}Error {self.YELLOW} al crear carpeta {self.BLUE}{folder_path}{self.RESET}')
+            return False  
