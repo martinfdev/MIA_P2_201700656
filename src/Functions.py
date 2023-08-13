@@ -23,7 +23,7 @@ class Functions:
         return  int(time_s.timestamp())
     
     #return time_stamp in fomrat datetime
-    def get_time_stamp_obj(self, time_s):
+    def get_time_stamp_obj(self, time_s): # time_s is a int
         return datetime.datetime.fromtimestamp(time_s)
 
     #return string to bytes
