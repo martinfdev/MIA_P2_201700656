@@ -28,11 +28,11 @@ class Functions:
 
     #return string to bytes
     def string_to_bytes(self, string):
-        return string.encode('utf-8')
+        return string.encode()
 
     #return bytes to string
     def bytes_to_string(self, bytes):
-        return bytes.decode('utf-8')
+        return bytes.decode().rstrip('\x00')
 
     def err_msg(self, command, message):
         print(f"{self.RED}ERROR {command}: {self.YELLOW}{message} {self.RESET}")
