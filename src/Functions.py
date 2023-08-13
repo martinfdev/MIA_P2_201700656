@@ -54,10 +54,10 @@ class Functions:
         if not os.path.exists(file_path):
             return False
         try:
-            open(file_path, 'r')
+            open(file_path, 'rb')
             return True
         except IOError:
-            print(f'{file_path} ha sido creado!')
+            print(f'{self.RED}Error {self.YELLOW} al comprobar estado de archivo {self.BLUE}{file_path}{self.RESET}')
             return False
         
     def get_file_name(self, file_path):
