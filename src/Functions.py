@@ -2,6 +2,7 @@ import random
 import math
 import datetime
 import struct
+import os
 class Functions:
     def __init__(self):
         self.RESET = '\033[0m'
@@ -49,4 +50,16 @@ class Functions:
             print(f"{self.RED}Error  {self.RESET}al deserializar", struct.error)
             return None
 
+    def check_status_file(self, file_path):
+        if not os.path.exists(file_path):
+            return False
+        try:
+            open(file_path, 'r')
+            return True
+        except IOError:
+            print(f'{file_path} ha sido creado!')
+            return False
+        
+    def get_file_name(self, file_path):
+        return os.path.basename(file_path)    
       
