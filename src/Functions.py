@@ -57,7 +57,7 @@ class Functions:
             open(file_path, 'rb')
             return True
         except IOError:
-            print(f'{self.RED}Error {self.YELLOW} al comprobar estado de archivo {self.BLUE}{file_path}{self.RESET}')
+            print(f'{self.RED}Error {self.YELLOW} archivo {self.BLUE}{file_path}{self.YELLOW} no existe!{self.RESET}')
             return False
     
     def check_status_folder(self, folder_path):
@@ -68,10 +68,10 @@ class Functions:
     def get_file_name(self, file_path):
         return os.path.basename(file_path)    
 
-    def create_folder(self, folder_path):
+    def create_folder(self, folder_path, command = ""):
         try:
             os.makedirs(folder_path)
-            print(f'{self.GREEN}SUCCESS  {self.YELLOW} al crear carpeta {self.BLUE}{folder_path}{self.RESET}')
+            print(f'{self.GREEN}SUCCESS {command}: {self.YELLOW} al crear carpeta {self.BLUE}{folder_path}{self.RESET}')
             return True
         except OSError:
             print(OSError.args)
