@@ -2,14 +2,16 @@ import ply.lex as lex
 import ply.yacc as yacc
 from src.Functions import Functions
 from src.Exec import Exec
-from src.Primitive import *
 import re
+from src.Primitive import *
 from src.Mkdisk import Mkdisk
+from src.Rep import REP
 # reserve words
 reserve ={
-    'exec': 	'EXEC',
+    'execute': 	'EXECUTE',
     'mkdisk':   'MKDISK',
     'fdisk':    'FDISK',
+    'rep':      'REP',
     'path':     'PATH', 
     'size':     'SIZE',
     'fit':      'FIT',
@@ -115,10 +117,11 @@ def p_instructions_instruction(t):
 
 def p_instruction(t):
     '''
-    instruction :   exec_instruction
+    instruction :   execute_instruction
                 |   mkdisk_instruction
                 |   fdisk_instruction
                 |   print_comments
+                |   rep_instruction
     '''
     t[0] = t[1]
 
@@ -129,14 +132,14 @@ def p_instruction_error_0(t):
     print(f"{Functions().RED}Error Sintáctico {Functions().RESET}" + str(t[1].value) + " line: " + str(t.lineno(1)) + " column: " + str(find_column(input, t.slice[1])))
     t[0] = ""
 
-def p_exec_instruction(t):
-    '''exec_instruction :   EXEC DASH path_eq_pathdir'''
+def p_execute_instruction(t):
+    '''execute_instruction :   EXECUTE DASH path_eq_pathdir'''
     t[0] = Exec(t[3]).read_file()
     # print(t[4]+" "+t[5])
 
 def p_mkdisk_instruction(t):
     '''mkdisk_instruction  : MKDISK ls_params_mkdisk'''
-    Mkdisk(t[2]).create_disk()
+    Mkdisk(t[2]).execute_mkdisk()
     t[0] = ""
 
 def p_ls_params_mkdisk(t):
@@ -159,6 +162,12 @@ def p_fdisk_instruction(t):
     '''fdisk_instruction :  FDISK ID'''
     print(t[2])
     t[0] = t[1]
+
+def p_rep_instruction(t):
+    '''rep_instruction :    REP path_eq_pathdir'''
+    REP(t[2]).execute_rep()
+    t[0] = ""
+
 
 def p_path_eq_pathdir(t):
     '''path_eq_pathdir  : PATH EQUALTO PATH_DIRECTORY FILENAME
