@@ -17,25 +17,26 @@ class BinaryFileManager:
             print(f'{function.RED}Error Archivo {function.RESET} al crear {file_name}')
             return False
 
-    # fill binary file wiht data '\0' buffer
+    # fill binary file wiht data '\x00' buffer
     def fill_binary_file(self, size_buffer, init_position):
         function = fn()
         if not function.check_status_file(self.file_path):
             print(f"{function.RED}Error Archivo {function.RESET}al escribir en {function.YELLOW}{self.file_path}{function.RESET} no existe!")
-            return
+            return False
         try:
             with open(self.file_path, 'r+b') as file:
-                file.seek(init_position)    
-                file.write(b'\0' * size_buffer)
-                file.flush()
-                os.fsync(file.fileno())
+                file.seek(init_position)
+                buffer = b'\x00' * size_buffer
+                file.write(buffer)
+                return True 
         except IOError:
             print(f'{function.RED}Error Archivo {function.RESET}al escribir en {function.BLUE}{self.file_path}{function.RESET}')        
+            return False
 
     def write_binary_data(self, data, position):
         function = fn()
         try:
-            with open(self.file_path, 'r+b') as file:
+            with open(self.file_path, 'rb+') as file:
                 file.seek(position)
                 file.write(data)
         except IOError:
