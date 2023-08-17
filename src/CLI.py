@@ -1,15 +1,17 @@
+import re
 import ply.lex as lex
 import ply.yacc as yacc
 from src.Functions import Functions
 from src.Exec import Exec
-import re
 from src.Primitive import *
 from src.Mkdisk import Mkdisk
 from src.Rep import REP
+from src.Rmdisk import Rmdisk
 # reserve words
 reserve ={
     'execute': 	'EXECUTE',
     'mkdisk':   'MKDISK',
+    'rmdisk':   'RMDISK',
     'fdisk':    'FDISK',
     'rep':      'REP',
     'path':     'PATH', 
@@ -119,6 +121,7 @@ def p_instruction(t):
     '''
     instruction :   execute_instruction
                 |   mkdisk_instruction
+                |   rmdisk_instruction
                 |   fdisk_instruction
                 |   print_comments
                 |   rep_instruction
@@ -157,6 +160,12 @@ def p_param_mkdisk(t):
                     |   DASH fit_eq_id
                     |   DASH unit_eq_unit'''
     t[0] = t[2]
+
+def p_rmdisk_instruction(t):
+    '''rmdisk_instruction : RMDISK DASH path_eq_pathdir'''
+    Rmdisk(t[3]).execute_rmdisk()
+    t[0] = ""
+    
 
 def p_fdisk_instruction(t):
     '''fdisk_instruction :  FDISK ID'''
@@ -208,11 +217,10 @@ def p_print_comments(t):
 #             str(t.type), str(t.value)))
 #     else:
 #         print(Functions().RED+"Error"+Functions().RESET +" sintactico {}".format(t))
-
-
 input = ''
 def cli_command(command):
     # construct to lexer analyzer
+    global input 
     input = command
     lexer = lex.lex()
     parser = yacc.yacc()
