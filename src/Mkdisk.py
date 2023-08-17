@@ -24,13 +24,13 @@ class Mkdisk:
 
     def _set_values(self):
         for param in self._list_params:
-            if type(param) is Size:
+            if isinstance(param, Size):
                 self._size = param.get_value()
-            elif type(param) is Fit:
+            elif isinstance(param, Fit):
                 self._fit = param.get_value()
-            elif type(param) is Unit:
+            elif isinstance(param, Unit):
                 self._unit = param.get_value()
-            elif type(param) is Path:
+            elif isinstance(param, Path):
                 self._path = param.path
                 self._file_name = param.filename
 
