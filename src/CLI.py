@@ -59,7 +59,7 @@ def t_COMMENTMULTILINE(t):
     return t
 
 def t_INTNUM(t):
-    r'\d+'
+    r'-?\d+'
     try:
         t.value = int(t.value)
     except ValueError:
@@ -230,7 +230,8 @@ def p_unit_eq_id(t):
     t[0] = Unit(t[3])
 
 def p_name_eq_id(t):
-    '''name_eq_id : NAME EQUALTO ID'''
+    '''name_eq_id   :   NAME EQUALTO ID
+                    |   NAME EQUALTO STRING'''
     t[0] = ID(t[3])
 
 def p_type_eq_id(t):
@@ -239,11 +240,11 @@ def p_type_eq_id(t):
 
 def p_delete_eq_id(t):
     '''delete_eq_id : DELETE EQUALTO ID'''
-    t[0] = Delete(t[3])
+    t[0] = Delete(str(t.lineno(1)), str(find_column(input, t.slice[1])), t[3])
 
 def p_add_eq_intnum(t):
     '''add_eq_intnum : ADD EQUALTO INTNUM'''
-    t[0] = Add(t[3])    
+    t[0] = Add(str(t.lineno(1)), str(find_column(input, t.slice[1])), t[3])  
     
 def p_print_comments(t):
     '''print_comments : COMMENTUNTLINE
