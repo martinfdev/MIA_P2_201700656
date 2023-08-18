@@ -44,7 +44,10 @@ class Mkdisk:
         if self._size == -1:
             fns().err_msg("MKDISK", "No se especificó el parámetro obligatorio SIZE");
             return False
-        if self._size <= 0:
+        if self._size == None:
+            fns().err_msg("MKDISK", "No se especificó el parámetro obligatorio SIZE");
+            return False
+        elif self._size <= 0:
             fns().err_msg("MKDISK", "El parámetro SIZE no puede ser negativo o cero");
             return False
         if self._unit != "K" and self._unit != "M":
@@ -56,11 +59,12 @@ class Mkdisk:
         return True
     
     def _set_value_unit(self):
-        if self._unit == "K":
-            return self._size * 1024 # 1 KB = 1024 bytes
-        elif self._unit == "M":
-            return self._size * 1024 * 1024 # 1 MB = 1024 KB = 1024 * 1024 bytes
-        elif self._unit == "B": return self._size # bytes
+        if self._size != None:
+            if self._unit == "K":
+                return self._size * 1024 # 1 KB = 1024 bytes
+            elif self._unit == "M":
+                return self._size * 1024 * 1024 # 1 MB = 1024 KB = 1024 * 1024 bytes
+            elif self._unit == "B": return self._size # bytes
 
     def _get_fit_for_mbr(self):
         if self._fit == "BF": return "B"
@@ -77,7 +81,6 @@ class Mkdisk:
         else:
             bfm(self._path+self._file_name).create_file() 
             function.success_msg("MKDISK", "archivo "+function.CYAN+self._file_name+function.RESET+" reescrito!")
-        print(self._size, self._unit, self._size)
         return bfm(self._path+self._file_name).fill_binary_file(self._size, 0)
     
     def _write_mbr(self):
