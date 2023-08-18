@@ -54,8 +54,10 @@ class Type:
         return str.upper(self.value)
 
 class Delete:
-    def __init__(self, value=None):
+    def __init__(self, line, column, value=None):
         self.value = value
+        self.line = line
+        self.column = column
 
     def get_value(self):
         if self.value == None:
@@ -63,8 +65,10 @@ class Delete:
         return str.upper(self.value)                        
     
 class Add:
-    def __init__(self, value=None) -> None:
+    def __init__(self, line, column, value=None) -> None:
         self.value = value
+        self.line = line
+        self.column = column
 
     def get_value(self):
         if self.value == None:
