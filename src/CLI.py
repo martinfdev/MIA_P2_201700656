@@ -7,6 +7,7 @@ from src.Primitive import *
 from src.Mkdisk import Mkdisk
 from src.Rep import REP
 from src.Rmdisk import Rmdisk
+from src.Fdisk import Fdisk
 # reserve words
 reserve ={
     'execute': 	'EXECUTE',
@@ -18,6 +19,10 @@ reserve ={
     'size':     'SIZE',
     'fit':      'FIT',
     'unit':     'UNIT',
+    'name':     'NAME',
+    'type':     'TYPE',
+    'add':      'ADD',
+    'delete':   'DELETE',
 }
 
 tokens = [
@@ -165,18 +170,36 @@ def p_rmdisk_instruction(t):
     '''rmdisk_instruction : RMDISK DASH path_eq_pathdir'''
     Rmdisk(t[3]).execute_rmdisk()
     t[0] = ""
-    
 
 def p_fdisk_instruction(t):
-    '''fdisk_instruction :  FDISK ID'''
-    print(t[2])
-    t[0] = t[1]
+    '''fdisk_instruction  : FDISK ls_params_fdisk'''
+    Fdisk(t[2]).executefdisk()
+    t[0] = ""
+
+def p_ls_params_fdisk(t):
+    '''ls_params_fdisk      :   ls_params_fdisk param_fdisk
+                            |   param_fdisk'''
+    if len(t) == 3:
+        t[1].append(t[2])
+        t[0] = t[1]
+    else:
+        t[0] = [t[1]]
+
+def p_param_fdisk(t):
+    '''param_fdisk  :   DASH size_eq_intnum
+                    |   DASH path_eq_pathdir
+                    |   DASH name_eq_id
+                    |   DASH unit_eq_unit
+                    |   DASH type_eq_id
+                    |   DASH fit_eq_id
+                    |   DASH delete_eq_id
+                    |   DASH add_eq_intnum'''
+    t[0] = t[2]
 
 def p_rep_instruction(t):
     '''rep_instruction :    REP path_eq_pathdir'''
     REP(t[2]).execute_rep()
     t[0] = ""
-
 
 def p_path_eq_pathdir(t):
     '''path_eq_pathdir  : PATH EQUALTO PATH_DIRECTORY FILENAME
@@ -206,6 +229,22 @@ def p_unit_eq_id(t):
     '''unit_eq_unit : UNIT EQUALTO ID'''
     t[0] = Unit(t[3])
 
+def p_name_eq_id(t):
+    '''name_eq_id : NAME EQUALTO ID'''
+    t[0] = ID(t[3])
+
+def p_type_eq_id(t):
+    '''type_eq_id : TYPE EQUALTO ID'''
+    t[0] = Type(t[3])
+
+def p_delete_eq_id(t):
+    '''delete_eq_id : DELETE EQUALTO ID'''
+    t[0] = Delete(t[3])
+
+def p_add_eq_intnum(t):
+    '''add_eq_intnum : ADD EQUALTO INTNUM'''
+    t[0] = Add(t[3])    
+    
 def p_print_comments(t):
     '''print_comments : COMMENTUNTLINE
                       | COMMENTMULTILINE'''
