@@ -4,7 +4,7 @@ class Size:
 
     def get_value(self):
         if self.value == None:
-            return 0
+            return None
         return int(self.value)
 
 class Path:
@@ -33,4 +33,40 @@ class Unit:
     def get_value(self):
         if self.value == None:
             return None
-        return str.upper(self.value) #return value in uppercase    
+        return str.upper(self.value) #return value in uppercase
+
+class ID:
+    def __init__(self, value=None):
+        self.value = value
+
+    def get_value(self):
+        if self.value == None:
+            return None
+        return self.value
+
+class Type:
+    def __init__(self, value=None):
+        self.value = value
+
+    def get_value(self):
+        if self.value == None:
+            return None
+        return str.upper(self.value)
+
+class Delete:
+    def __init__(self, value=None):
+        self.value = value
+
+    def get_value(self):
+        if self.value == None:
+            return None
+        return str.upper(self.value)                        
+    
+class Add:
+    def __init__(self, value=None) -> None:
+        self.value = value
+
+    def get_value(self):
+        if self.value == None:
+            return None
+        return int(self.value)     
