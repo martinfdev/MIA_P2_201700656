@@ -85,6 +85,6 @@ class Mkdisk:
     
     def _write_mbr(self):
         new_mbr = mbr()
-        new_mbr.setValues(self._size, fns().get_time_stamp(), fns().get_random_mumber(1, 200000), self._get_fit_for_mbr())
+        new_mbr.setValues(self._size, fns().get_random_mumber(1, 200000), self._get_fit_for_mbr())
         bfm(self._path+self._file_name).write_binary_data(new_mbr.serialize_mbr(), 0)
         return True
