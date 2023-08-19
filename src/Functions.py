@@ -19,9 +19,8 @@ class Functions:
 
     #return time_stamp in value int
     def get_time_stamp_now(self):
-        time_s = datetime.datetime.now()
-        return  time_s.timestamp()
-    
+        return datetime.datetime.now()
+        
     #return int param is a time_stamp
     def get_time_stamp(self, time_s): # time_s is a datetime
         return  int(time_s.timestamp())
