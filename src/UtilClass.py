@@ -105,12 +105,12 @@ class Partition:
 class EBR:
     def __init__(self) -> None:
         self.FORMATEBR = '2c2Ii16s' # 1 char, 1 char, 2 int unsigned, 16 char
-        self.part_status = '\0' # 1 byte tipo char
-        self.part_fit = '\0' # 1 byte tipo char
+        self.part_status = b'\0' # 1 byte tipo char
+        self.part_fit = b'\0' # 1 byte tipo char
         self.part_start = 0 # 4 bytes tipo int
-        self.part_size = '\0' # 4 bytes tipo int
-        self.part_next = '-1' # 4 bytes tipo int
-        self.part_name = '\0' # 16 bytes char[16]    
+        self.part_size = 0 # 4 bytes tipo int
+        self.part_next = -1 # 4 bytes tipo int
+        self.part_name = b'\0'*16 # 16 bytes char[16]    
 
     def setValues(self, part_status, part_fit, part_start, part_size, part_next, part_name):
         fns = fn()
