@@ -64,12 +64,17 @@ class Fdisk:
                 return
 
         #check if exist entended partition for logical partition
-        if self._type == 'L' and not self._check_exist_extented_partition(self._tmp_mbr):
-            fn.err_msg("FDISK", "No existe una partición extendida en el disco "+fn.RED+self._path)
-            return
-        
-
-
+        if self._type == 'L':
+            if not self._check_exist_extented_partition(self._tmp_mbr):
+                fn.err_msg("FDISK", "No existe una partición extendida para particion logica en "+fn.RED+self._path)
+                return
+            if not self._add_logic_partition(list_partition):
+                fn.err_msg("FDISK", "No se pudo agregar la partición logica "+fn.RED+str(self._name))
+                return
+            else:
+                fn.success_msg("FDISK", "Se agregó la partición logica "+fn.RED+str(self._name))
+                return
+            
         #check if name partition exist
         if self._check_exist_partition(self._tmp_mbr, self._name):
             fn.err_msg("FDISK", "Ya existe una partición con el nombre "+fn.RED+str(self._name))
@@ -87,6 +92,8 @@ class Fdisk:
         elif self._type == 'E' and not self._check_exist_extented_partition(self._tmp_mbr):
             newEBR = EBR()
             bfm(self._path).write_binary_data(newEBR.serialize_ebr(), self._calculate_partition_start(list_partition))
+
+
 
         newpart = self._create_partition()
         if newpart is None:
@@ -299,3 +306,60 @@ class Fdisk:
             self._tmp_mbr.mbr_partition_4 = list_partition[3]
             bfm(self._path).write_binary_data(self._tmp_mbr.serialize_mbr(), 0)
         return state
+    
+    def _add_logic_partition(self, list_partition):
+        current_ebr = EBR()
+        ext_partition = None
+        for part in list_partition:
+            if part.part_type == 'E':
+                ext_partition = part
+                break
+        if ext_partition is None:
+            return False
+        
+        if ext_partition.part_size < self._get_value_unit_partition():
+            fn().err_msg("FDISK", "No hay espacio disponible en la partición extendida "+fn().RED+self._path)
+            return False
+        #read default ebr in extended partition
+        current_ebr.deserialize_ebr(bfm(self._path).read_binary_data(ext_partition.part_start, struct.calcsize(current_ebr.FORMATEBR)))
+
+        #default ebr is empty write new ebr
+        free_space = ext_partition.part_size
+        if current_ebr.ebr_size == 0:
+            current_ebr.ebr_status = '1'
+            current_ebr.ebr_fit = self._get_fit_partition()
+            current_ebr.ebr_size = self._get_value_unit_partition()
+            current_ebr.ebr_next = -1
+            current_ebr.ebr_name = self._name
+            current_ebr.ebr_start = ext_partition.part_start
+            bfm(self._path).write_binary_data(current_ebr.serialize_ebr(), ext_partition.part_start)
+            return True
+        free_space -= current_ebr.ebr_size
+        if current_ebr.ebr_name == self._name:
+                fn().err_msg("FDISK", "Ya existe una partición logica con el nombre "+fn().RED+str(self._name))
+                return False
+        while current_ebr.ebr_next != -1:
+            current_ebr.deserialize_ebr(bfm(self._path).read_binary_data(current_ebr.ebr_next, struct.calcsize(current_ebr.FORMATEBR)))
+            free_space -= current_ebr.ebr_size
+            if current_ebr.ebr_name == self._name:
+                fn().err_msg("FDISK", "Ya existe una partición logica con el nombre "+fn().RED+str(self._name))
+                return False
+        
+        if free_space < self._get_value_unit_partition():
+            fn().err_msg("FDISK", "No se puede agregar particion logica insuficiente espacio en la partición extendida "+fn().RED+self._path)
+            return False
+
+
+
+        current_ebr.ebr_next = current_ebr.ebr_start + current_ebr.ebr_size
+        bfm(self._path).write_binary_data(current_ebr.serialize_ebr(), current_ebr.ebr_start)
+        new_ebr = EBR()
+        new_ebr.ebr_status = '1'
+        new_ebr.ebr_fit = self._get_fit_partition()
+        new_ebr.ebr_size = self._get_value_unit_partition()
+        new_ebr.ebr_next = -1
+        new_ebr.ebr_name = self._name
+        bfm(self._path).write_binary_data(new_ebr.serialize_ebr(), current_ebr.ebr_next)
+        return True
+            
+
