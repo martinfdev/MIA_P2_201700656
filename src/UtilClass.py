@@ -71,7 +71,7 @@ class Partition:
         self.part_fit = part_fit
         self.part_start = part_start
         self.part_size = part_size
-        self.part_name = part_name
+        self.part_name = part_name.truncate(16)
 
     def serialize_partition(self):
         fns = fn()
@@ -105,34 +105,45 @@ class Partition:
 class EBR:
     def __init__(self) -> None:
         self.FORMATEBR = '2c2Ii16s' # 1 char, 1 char, 2 int unsigned, 16 char
-        self.part_status = b'\0' # 1 byte tipo char
-        self.part_fit = b'\0' # 1 byte tipo char
-        self.part_start = 0 # 4 bytes tipo int
-        self.part_size = 0 # 4 bytes tipo int
-        self.part_next = -1 # 4 bytes tipo int
-        self.part_name = b'\0'*16 # 16 bytes char[16]    
+        self.ebr_status = '\0' # 1 byte tipo char
+        self.ebr_fit = '\0' # 1 byte tipo char
+        self.ebr_start = 0 # 4 bytes tipo int
+        self.ebr_size = 0 # 4 bytes tipo int
+        self.ebr_next = -1 # 4 bytes tipo int
+        self.ebr_name = '\0'*16 # 16 bytes char[16]    
 
-    def setValues(self, part_status, part_fit, part_start, part_size, part_next, part_name):
-        fns = fn()
-        self.part_status = fns.string_to_bytes(part_status)
-        self.part_fit = fns.string_to_bytes(part_fit)
-        self.part_start = part_start
-        self.part_size = part_size
-        self.part_next = part_next
-        self.part_name = fns.string_to_bytes(part_name)
+    def setValues(self, ebr_status, ebr_fit, ebr_start, ebr_size, ebr_next, ebr_name):
+        self.ebr_status = ebr_status
+        self.ebr_fit = ebr_fit
+        self.ebr_start = ebr_start
+        self.ebr_size = ebr_size
+        self.ebr_next = ebr_next
+        self.ebr_name = ebr_name.truncate(16)
 
     def serialize_ebr(self):
-        return fn().serialize(self.FORMATEBR, self.part_status, self.part_fit, self.part_start+struct.calcsize(self.FORMATEBR), self.part_size, self.part_next, self.part_name)
+        fns = fn()
+        return fns.serialize(self.FORMATEBR, fns.string_to_bytes(self.ebr_status), fns.string_to_bytes(self.ebr_fit
+        ), self.ebr_start, self.ebr_size, self.ebr_next, fns.string_to_bytes(self.ebr_name))
 
     def deserialize_ebr(self, data):
         dataebr = fn().deserialize(self.FORMATEBR, data)
         if dataebr is None:
             fn().err_msg("EBR", "No se pudo deserializar el EBR")
             return self
-        self.part_status = fn().bytes_to_string(dataebr[0])
-        self.part_fit = fn().bytes_to_string(dataebr[1])
-        self.part_start = dataebr[2]
-        self.part_size = dataebr[3]
-        self.part_next = dataebr[4]
-        self.part_name = fn().bytes_to_string(dataebr[5])
+        
+        if dataebr[0] == b'\x00' and dataebr[1] == b'\x00' and dataebr[2] == 0 and dataebr[3] == 0 and dataebr[4] == -1:
+            self.ebr_status = '\0'
+            self.ebr_fit = '\0'
+            self.ebr_start = 0
+            self.ebr_size = 0
+            self.ebr_next = -1
+            self.ebr_name = '\0'*16
+            return self
+
+        self.ebr_status = fn().bytes_to_string(dataebr[0])
+        self.ebr_fit = fn().bytes_to_string(dataebr[1])
+        self.ebr_start = dataebr[2]
+        self.ebr_size = dataebr[3]
+        self.ebr_next = dataebr[4]
+        self.ebr_name = fn().bytes_to_string(dataebr[5])
         return self    
