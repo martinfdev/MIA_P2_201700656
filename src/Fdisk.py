@@ -17,7 +17,7 @@ class Fdisk:
         self._add = None
         self._mbr_size = 0
         self._mbr_fit = ''
-        self._tmp_mbr = None
+        self._tmp_mbr = MBR()
 
     def executefdisk(self):
         fn = fns()
@@ -39,13 +39,44 @@ class Fdisk:
             fn.err_msg("FDISK", "No se pudo agregar la partición")
             return
 
+        #delete partition with name
+        if self._delete is not None:
+            if not self._check_exist_partition_with_name(list_partition, self._name):
+                fn.err_msg("FDISK", "delete no existe la partición con el nombre "+fn.RED+str(self._name))
+                return
+            if not self._delete_partition(list_partition):
+                fn.err_msg("FDISK", "delte no se pudo eliminar la partición "+fn.RED+str(self._name))
+                return
+            else:
+                fn.success_msg("FDISK", "Se eliminó la partición "+fn.RED+str(self._name))
+                return
+        
+        #add partition size to partition with name
+        if self._add is not None:
+            if not self._check_exist_partition_with_name(list_partition, self._name):
+                fn.err_msg("FDISK", "add no existe partición con el nombre "+fn.RED+str(self._name))
+                return
+            if not self._add_size_partition(list_partition):
+                fn.err_msg("FDISK", "add no se pudo agregar el tamaño a la partición "+fn.RED+str(self._name))
+                return
+            else:
+                fn.success_msg("FDISK", "Se agregó el tamaño a la partición "+fn.RED+str(self._name))
+                return
+
+        #check if exist entended partition for logical partition
+        if self._type == 'L' and not self._check_exist_extented_partition(self._tmp_mbr):
+            fn.err_msg("FDISK", "No existe una partición extendida en el disco "+fn.RED+self._path)
+            return
+        
+
+
         #check if name partition exist
         if self._check_exist_partition(self._tmp_mbr, self._name):
             fn.err_msg("FDISK", "Ya existe una partición con el nombre "+fn.RED+str(self._name))
             return
         
         #check free space in disk
-        if self._get_free_space_disk(list_partition) < self._get_unit_partition():
+        if self._get_free_space_disk(list_partition) < self._get_value_unit_partition():
             fn.err_msg("FDISK", "No hay espacio disponible en el disco "+fn.RED+self._path)
             return
 
@@ -53,19 +84,20 @@ class Fdisk:
         if self._type == 'E' and self._check_exist_extented_partition(self._tmp_mbr):
             fn.err_msg("FDISK", "Ya existe una partición extendida en el disco "+fn.RED+self._path)
             return
-        
-        #check if exist entended partition for logical partition
-        if self._type == 'L' and not self._check_exist_extented_partition(self._tmp_mbr):
-            fn.err_msg("FDISK", "No existe una partición extendida en el disco "+fn.RED+self._path)
-            return
-           
+        elif self._type == 'E' and not self._check_exist_extented_partition(self._tmp_mbr):
+            newEBR = EBR()
+            bfm(self._path).write_binary_data(newEBR.serialize_ebr(), self._calculate_partition_start(list_partition))
+
         newpart = self._create_partition()
+        if newpart is None:
+            return
+        newpart.part_start = self._calculate_partition_start(list_partition)
         if newpart is None:
             return
         if self._mbr_fit == 'F':
             value = self._set_partitition_with_first_fit(list_partition, newpart)
             if value:
-                fn.err_msg("FDISK", "No se pudo agregar la partición "+fn.RED+str(self._name))
+                fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
                 return
         self._tmp_mbr.mbr_partition_1 = list_partition[0]
         self._tmp_mbr.mbr_partition_2 = list_partition[1]
@@ -73,9 +105,11 @@ class Fdisk:
         self._tmp_mbr.mbr_partition_4 = list_partition[3]
 
         bfm(self._path).write_binary_data(self._tmp_mbr.serialize_mbr(), 0)
+        fn.success_msg("FDISK", "Se agregó la partición "+fn.RED+str(self._name))
 
     #error = False; success = True 
     def _set_params(self):
+        param_add_delete_found = False
         fn = fns()
         for param in self._list_params:
             if isinstance(param, Size):
@@ -92,10 +126,12 @@ class Fdisk:
                 self._type = param.get_value()
             elif isinstance(param, Fit):
                 self._fit = param.get_value()
-            elif isinstance(param, Delete):
+            elif not param_add_delete_found and isinstance(param, Delete):
                 self._delete = param.get_value()
-            elif isinstance(param, Add):
+                param_add_delete_found = True
+            elif not param_add_delete_found and isinstance(param, Add):
                 self._add = param.get_value()
+                param_add_delete_found = True
             if self._type != "P" and self._type != "E" and self._type != "L":
                 fn.err_msg("FDISK", "El valor del parámetro TYPE no es válido solo se acepta P, E o L")
                 return False
@@ -104,7 +140,14 @@ class Fdisk:
                 return False
             if self._unit != "K" and self._unit != "M" and self._unit != "B":
                 fn.err_msg("FDISK", "El valor del parámetro UNIT no es válido solo se acepta K, M o B")
-                return False
+            if self._add is not None:
+                if self._add < 1:
+                    fn.err_msg("FDISK", "El valor del parámetro ADD debe ser mayor a 0")
+                    return False    
+            if self._delete is not None:
+                if self._delete != "FULL":
+                    fn.err_msg("FDISK", "El valor del parámetro DELETE no es válido solo se acepta FULL")
+                    return False
         return True
 
     def _read_mbr_in_file(self):
@@ -119,10 +162,7 @@ class Fdisk:
         total_bytes_to_read = struct.calcsize(self._tmp_mbr.FORMATMBR) + struct.calcsize(self._tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
         binary_data_mbr = bfm(self._path).read_binary_data(0, total_bytes_to_read)
         self._tmp_mbr.deserialize_mbr(binary_data_mbr)
-        print("=============REP MBR=============")
-        print(f"MBR_TAMANO: {self._tmp_mbr.mbr_tamano} bytes")
-        print(f"MBR_TIME_STAMP: {self._tmp_mbr.mbr_time_stamp}")
-        print(f"MBR_DISK_SIGNATURE: {self._tmp_mbr.mbr_disk_signature}")
+
         return self._tmp_mbr
     
     def _create_partition(self):
@@ -132,11 +172,10 @@ class Fdisk:
             fn.err_msg("FDISK", "No se especificó el parámetro obligatorio NAME");
             return None
         new_part = Partition()
-        new_part.part_status = '0'
+        new_part.part_status = '1'
         new_part.part_type = self._type
         new_part.part_fit = self._get_fit_partition()
-        new_part.part_size = self._get_unit_partition()
-        #new_part.part_start = self._calculate_partition_start()
+        new_part.part_size = self._get_value_unit_partition()
         new_part.part_name = self._name
         return new_part
 
@@ -151,7 +190,8 @@ class Fdisk:
         fn.err_msg("FDISK", "El valor del parámetro FIT no es válido solo se acepta BF, FF o WF");
         return b'0'   
 
-    def _get_unit_partition(self):
+
+    def _get_value_unit_partition(self):
         fn = fns()
         if self._size == None:
             fn.err_msg("FDISK", "No se especificó el parámetro obligatorio SIZE");
@@ -170,13 +210,13 @@ class Fdisk:
             return True
         return False
 
-    def _calculate_partition_start(self, lits_partion):
-        if len(lits_partion) == 0:
-            return 0
-        elif len(lits_partion) == 1:
-            return lits_partion[0].part_start + lits_partion[0].part_size
-        else:
-            return lits_partion[len(lits_partion)-1].part_start + lits_partion[len(lits_partion)-1].part_size
+    def _calculate_partition_start(self, list_part):
+        start =struct.calcsize(self._tmp_mbr.FORMATMBR)+struct.calcsize(self._tmp_mbr.mbr_partition_1.FORMATPARTITION)*4
+        for part in list_part:
+            if part.part_type != '\0':
+                start += part.part_size
+        return start
+
 
     def _check_exist_partition(self, mbr, name):
         if mbr.mbr_partition_1.part_name == name or mbr.mbr_partition_2.part_name == name or mbr.mbr_partition_3.part_name == name or mbr.mbr_partition_4.part_name == name:
@@ -184,10 +224,13 @@ class Fdisk:
         return False
 
     def _get_free_space_disk(self, list_partition):
+        free_space = 0
         free_space = self._mbr_size
         for part in list_partition:
-            free_space -= part.part_size
+            if part.part_type != '\0':
+                free_space -= part.part_size
         return free_space
+            
     
     def _check_exist_partition_with_name(self, list_partition, name):
         for part in list_partition:
@@ -212,3 +255,47 @@ class Fdisk:
                 list_partition[i] = new_part
                 return False
         return True
+    
+    def _delete_partition(self, list_partition):
+        state = False
+        pointer_to_delete = 0 
+        size_to_delete = 0
+        for part in list_partition:
+            if part.part_name == self._name:
+                pointer_to_delete = part.part_start
+                size_to_delete = part.part_size
+                part.part_status = '\0'
+                part.part_type = '\0'
+                part.part_fit = '\0'
+                part.part_start = 0
+                part.part_name = '\0'*16
+                state = True
+        if state:
+            self._tmp_mbr.mbr_partition_1 = list_partition[0]
+            self._tmp_mbr.mbr_partition_2 = list_partition[1]
+            self._tmp_mbr.mbr_partition_3 = list_partition[2]
+            self._tmp_mbr.mbr_partition_4 = list_partition[3]
+            bfm(self._path).write_binary_data(self._tmp_mbr.serialize_mbr(), 0)
+            bfm(self._path).fill_binary_file(size_to_delete, pointer_to_delete)
+        return state
+    
+    def _add_size_partition(self, list_partition):
+        if self._add is None:
+            return False
+        self._size = self._add
+        self._add = self._get_value_unit_partition()
+        if self._get_free_space_disk(list_partition) < self._add:
+            fn().err_msg("FDISK", "Add no hay espacio disponible en el disco "+fn().RED+self._path)
+            return False
+        state = False
+        for part in list_partition:
+            if part.part_name == self._name:
+                part.part_size += self._add
+                state = True
+        if state:
+            self._tmp_mbr.mbr_partition_1 = list_partition[0]
+            self._tmp_mbr.mbr_partition_2 = list_partition[1]
+            self._tmp_mbr.mbr_partition_3 = list_partition[2]
+            self._tmp_mbr.mbr_partition_4 = list_partition[3]
+            bfm(self._path).write_binary_data(self._tmp_mbr.serialize_mbr(), 0)
+        return state
