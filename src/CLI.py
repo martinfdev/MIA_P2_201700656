@@ -5,9 +5,10 @@ from src.Functions import Functions
 from src.Exec import Exec
 from src.Primitive import *
 from src.Mkdisk import Mkdisk
-from src.Rep import REP
 from src.Rmdisk import Rmdisk
 from src.Fdisk import Fdisk
+from src.Mount import Mount
+from src.Rep import REP
 # reserve words
 reserve ={
     'execute': 	'EXECUTE',
@@ -23,6 +24,7 @@ reserve ={
     'type':     'TYPE',
     'add':      'ADD',
     'delete':   'DELETE',
+    'mount':    'MOUNT',
 }
 
 tokens = [
@@ -129,6 +131,7 @@ def p_instruction(t):
                 |   rmdisk_instruction
                 |   fdisk_instruction
                 |   print_comments
+                |   mount_instruction
                 |   rep_instruction
     '''
     t[0] = t[1]
@@ -196,6 +199,27 @@ def p_param_fdisk(t):
                     |   DASH add_eq_intnum'''
     t[0] = t[2]
 
+def p_mount_instruction(t):
+    '''mount_instruction    :   MOUNT ls_params_mount'''
+    mount = Mount(t[2]).execute_mount()
+    if mount != None:
+        list_mount_partition.append(mount)
+    t[0] = ''
+
+def p_ls_params_mount(t):
+    '''ls_params_mount      :   ls_params_mount param_mount
+                            |   param_mount'''
+    if len(t) == 3:
+        t[1].append(t[2])
+        t[0] = t[1]
+    else:
+        t[0] = [t[1]]
+
+def p_param_mount(t):
+    '''param_mount  :   DASH path_eq_pathdir
+                    |   DASH name_eq_id'''
+    t[0] = t[2]    
+
 def p_rep_instruction(t):
     '''rep_instruction :    REP path_eq_pathdir'''
     REP(t[2]).execute_rep()
@@ -258,10 +282,13 @@ def p_print_comments(t):
 #     else:
 #         print(Functions().RED+"Error"+Functions().RESET +" sintactico {}".format(t))
 input = ''
+list_mount_partition = []
 def cli_command(command):
     # construct to lexer analyzer
     global input 
+    global list_mount_partition
     input = command
+    list_mount_partition = []
     lexer = lex.lex()
     parser = yacc.yacc()
     output = parser.parse(command)
