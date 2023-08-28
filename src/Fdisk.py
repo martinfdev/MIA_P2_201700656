@@ -126,9 +126,6 @@ class Fdisk:
         bfm(self._path).write_binary_data(self._tmp_mbr.serialize_mbr(), 0)
         fn.success_msg("FDISK", "Se agregó la partición "+fn.RED+str(self._name))
 
-
-
-
     #error = False; success = True 
     def _set_params(self):
         param_add_delete_found = False
@@ -317,6 +314,8 @@ class Fdisk:
                 part.part_name = '\0'*16
                 state = True
         if state:
+            if self._tmp_mbr is None:
+                return False
             self._tmp_mbr.mbr_partition_1 = list_partition[0]
             self._tmp_mbr.mbr_partition_2 = list_partition[1]
             self._tmp_mbr.mbr_partition_3 = list_partition[2]
@@ -339,6 +338,8 @@ class Fdisk:
                 part.part_size += self._add
                 state = True
         if state:
+            if self._tmp_mbr is None:
+                return False
             self._tmp_mbr.mbr_partition_1 = list_partition[0]
             self._tmp_mbr.mbr_partition_2 = list_partition[1]
             self._tmp_mbr.mbr_partition_3 = list_partition[2]
@@ -396,5 +397,6 @@ class Fdisk:
         new_ebr.ebr_size = self._get_value_unit_partition()
         new_ebr.ebr_next = -1
         new_ebr.ebr_name = self._name
+        new_ebr.ebr_start = current_ebr.ebr_next
         bfm(self._path).write_binary_data(new_ebr.serialize_ebr(), current_ebr.ebr_next)
         return True
