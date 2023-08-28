@@ -84,7 +84,7 @@ class Partition:
             fn().err_msg("PARTITION", "No se pudo deserializar la partición" + str(num_partition))
             return self
         
-        if partiontion_data[0] == b'\x00' and partiontion_data[1] == b'\x00' and partiontion_data[2] == b'\x00' and partiontion_data[3] == 0 and partiontion_data[4] == 0:
+        if partiontion_data[1] == b'\x00' and partiontion_data[2] == b'\x00' and partiontion_data[3] == 0:
             self.part_status = '\0'
             self.part_type = '\0'
             self.part_fit = '\0'
