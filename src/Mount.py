@@ -16,16 +16,12 @@ class Mount:
             fn().err_msg("Mount", "No se pudo montar la partición "+str(self._name))
             return
         if not self._generateid():
-            fn().err_msg("Mount", "No se pudo generar el id para la partición "+str(self._name))
+            fn().err_msg("Mount", "No se pudo montar la partición "+str(self._name))
             return
         return self
 
     #set and check properties for mount
     def _set_val_properties_mount(self, list_params):
-        if len(list_params) != 2:
-            fn().err_msg("Mount", "Se esperaban 2 parámetros obligatorios")
-            return False
-
         for param in list_params:
             if isinstance(param, Path):
                 self._path = param.get_value()
@@ -35,8 +31,10 @@ class Mount:
         
         if self._path == "":
             fn().err_msg("Mount", "No se encontró el parámetro -path")
+            return False
         if self._name == "":
             fn().err_msg("Mount", "No se encontró el parámetro -name")
+            return False
         return True
 
     #generate id for mount
