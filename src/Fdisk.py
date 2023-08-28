@@ -93,8 +93,7 @@ class Fdisk:
             newEBR = EBR()
             bfm(self._path).write_binary_data(newEBR.serialize_ebr(), self._calculate_partition_start(list_partition))
 
-
-
+        #create partition
         newpart = self._create_partition()
         if newpart is None:
             return
@@ -106,6 +105,19 @@ class Fdisk:
             if value:
                 fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
                 return
+
+        if self._mbr_fit == 'B':
+            value = self._set_partitition_with_best_fit(list_partition, newpart)
+            if value:
+                fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
+                return
+            
+        if self._mbr_fit == 'W':
+            value = self._set_partitition_with_worst_fit(list_partition, newpart)
+            if value:
+                fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
+                return
+
         self._tmp_mbr.mbr_partition_1 = list_partition[0]
         self._tmp_mbr.mbr_partition_2 = list_partition[1]
         self._tmp_mbr.mbr_partition_3 = list_partition[2]
@@ -113,6 +125,9 @@ class Fdisk:
 
         bfm(self._path).write_binary_data(self._tmp_mbr.serialize_mbr(), 0)
         fn.success_msg("FDISK", "Se agregó la partición "+fn.RED+str(self._name))
+
+
+
 
     #error = False; success = True 
     def _set_params(self):
@@ -197,7 +212,6 @@ class Fdisk:
         fn.err_msg("FDISK", "El valor del parámetro FIT no es válido solo se acepta BF, FF o WF");
         return b'0'   
 
-
     def _get_value_unit_partition(self):
         fn = fns()
         if self._size == None:
@@ -218,12 +232,11 @@ class Fdisk:
         return False
 
     def _calculate_partition_start(self, list_part):
-        start =struct.calcsize(self._tmp_mbr.FORMATMBR)+struct.calcsize(self._tmp_mbr.mbr_partition_1.FORMATPARTITION)*4
+        start = struct.calcsize(self._tmp_mbr.FORMATMBR)+struct.calcsize(self._tmp_mbr.mbr_partition_1.FORMATPARTITION)*4
         for part in list_part:
             if part.part_type != '\0':
                 start += part.part_size
         return start
-
 
     def _check_exist_partition(self, mbr, name):
         if mbr.mbr_partition_1.part_name == name or mbr.mbr_partition_2.part_name == name or mbr.mbr_partition_3.part_name == name or mbr.mbr_partition_4.part_name == name:
@@ -263,6 +276,32 @@ class Fdisk:
                 return False
         return True
     
+    def _set_partitition_with_best_fit(self, list_partition, new_part):
+        best_fit = None
+        for i in range(0, len(list_partition)):
+            if list_partition[i].part_type == '\0':
+                if best_fit is None:
+                    best_fit = list_partition[i]
+                elif best_fit.part_size > list_partition[i].part_size:
+                    best_fit = list_partition[i]
+        if best_fit is None:
+            return True
+        best_fit = new_part
+        return False
+
+    def _set_partitition_with_worst_fit(self, list_partition, new_part):
+        worst_fit = None
+        for i in range(0, len(list_partition)):
+            if list_partition[i].part_type == '\0':
+                if worst_fit is None:
+                    worst_fit = list_partition[i]
+                elif worst_fit.part_size < list_partition[i].part_size:
+                    worst_fit = list_partition[i]
+        if worst_fit is None:
+            return True
+        worst_fit = new_part
+        return False
+
     def _delete_partition(self, list_partition):
         state = False
         pointer_to_delete = 0 
@@ -349,8 +388,6 @@ class Fdisk:
             fn().err_msg("FDISK", "No se puede agregar particion logica insuficiente espacio en la partición extendida "+fn().RED+self._path)
             return False
 
-
-
         current_ebr.ebr_next = current_ebr.ebr_start + current_ebr.ebr_size
         bfm(self._path).write_binary_data(current_ebr.serialize_ebr(), current_ebr.ebr_start)
         new_ebr = EBR()
@@ -361,5 +398,3 @@ class Fdisk:
         new_ebr.ebr_name = self._name
         bfm(self._path).write_binary_data(new_ebr.serialize_ebr(), current_ebr.ebr_next)
         return True
-            
-
