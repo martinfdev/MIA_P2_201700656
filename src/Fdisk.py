@@ -229,6 +229,8 @@ class Fdisk:
         return False
 
     def _calculate_partition_start(self, list_part):
+        if self._tmp_mbr is None:
+            return 0
         start = struct.calcsize(self._tmp_mbr.FORMATMBR)+struct.calcsize(self._tmp_mbr.mbr_partition_1.FORMATPARTITION)*4
         for part in list_part:
             if part.part_type != '\0':
