@@ -8,6 +8,7 @@ from src.Mkdisk import Mkdisk
 from src.Rmdisk import Rmdisk
 from src.Fdisk import Fdisk
 from src.Mount import Mount
+from src.Unmount import Unmount
 from src.Rep import REP
 # reserve words
 reserve ={
@@ -25,10 +26,12 @@ reserve ={
     'add':      'ADD',
     'delete':   'DELETE',
     'mount':    'MOUNT',
+    'unmount':  'UNMOUNT',
+    'id':       'ID',
 }
 
 tokens = [
-    'ID',
+    'IDENTIFIER',
     'FILENAME',
     'DECIMALNUM',
     'INTNUM',
@@ -60,15 +63,6 @@ def t_COMMENTMULTILINE(t):
     r'\/\*(.|\n)*?\*\/'
     return t
 
-def t_INTNUM(t):
-    r'-?\d+'
-    try:
-        t.value = int(t.value)
-    except ValueError:
-        # print("Integer value too large %d", t.value)
-        t.value = 0
-    return t
-
 def t_PATH_DIRECTORY(t):
     r'\/[a-zA-Z0-9_\/]*\/'
     return t
@@ -82,10 +76,20 @@ def t_STRING(t):
     t.value = t.value[1:-1]
     return t
 
-def t_ID(t):
-    r'[a-zA-Z][a-zA-Z_0-9]*'
-    t.type = reserve.get(t.value.lower(), 'ID')    # Check for reserved words
+def t_IDENTIFIER(t):
+    r'[a-zA-Z_0-9][a-zA-Z_0-9]*'
+    t.type = reserve.get(t.value.lower(), 'IDENTIFIER')    # Check for reserved words
     return t
+
+def t_INTNUM(t):
+    r'-?\d+'
+    try:
+        t.value = int(t.value)
+    except ValueError:
+        # print("Integer value too large %d", t.value)
+        t.value = 0
+    return t
+
 
 # ignore character
 t_ignore = ' \t\r'
@@ -132,6 +136,7 @@ def p_instruction(t):
                 |   fdisk_instruction
                 |   print_comments
                 |   mount_instruction
+                |   unmount_instruction
                 |   rep_instruction
     '''
     t[0] = t[1]
@@ -220,6 +225,12 @@ def p_param_mount(t):
                     |   DASH name_eq_id'''
     t[0] = t[2]    
 
+def p_unmount_instruction(t):
+    '''unmount_instruction  :   UNMOUNT DASH id_eq_id'''
+    Unmount(t[3]).execute_unmount(list_mount_partition)
+    t[0] = ''
+
+
 def p_rep_instruction(t):
     '''rep_instruction :    REP path_eq_pathdir'''
     REP(t[2]).execute_rep()
@@ -246,24 +257,24 @@ def p_size_eq_intnum(t):
     t[0] = Size(t[3])
 
 def p_fit_eq_id(t):
-    '''fit_eq_id : FIT EQUALTO ID'''
+    '''fit_eq_id : FIT EQUALTO IDENTIFIER'''
     t[0] = Fit(t[3])
 
 def p_unit_eq_id(t):
-    '''unit_eq_unit : UNIT EQUALTO ID'''
+    '''unit_eq_unit : UNIT EQUALTO IDENTIFIER'''
     t[0] = Unit(t[3])
 
 def p_name_eq_id(t):
-    '''name_eq_id   :   NAME EQUALTO ID
+    '''name_eq_id   :   NAME EQUALTO IDENTIFIER
                     |   NAME EQUALTO STRING'''
     t[0] = ID(t[3])
 
 def p_type_eq_id(t):
-    '''type_eq_id : TYPE EQUALTO ID'''
+    '''type_eq_id : TYPE EQUALTO IDENTIFIER'''
     t[0] = Type(t[3])
 
 def p_delete_eq_id(t):
-    '''delete_eq_id : DELETE EQUALTO ID'''
+    '''delete_eq_id : DELETE EQUALTO IDENTIFIER'''
     t[0] = Delete(str(t.lineno(1)), str(find_column(input, t.slice[1])), t[3])
 
 def p_add_eq_intnum(t):
@@ -275,6 +286,10 @@ def p_print_comments(t):
                       | COMMENTMULTILINE'''
     print(f'{Functions().MAGENTA}{t[1]}{Functions().RESET}')
     t[0] = ""
+
+def p_id_eq_id(t):
+    '''id_eq_id : ID EQUALTO IDENTIFIER'''
+    t[0] = ID(t[3])    
 # def p_error(t):
 #     if t:
 #         print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {}".format(
