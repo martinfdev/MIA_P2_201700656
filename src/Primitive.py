@@ -73,4 +73,13 @@ class Add:
     def get_value(self):
         if self.value == None:
             return None
-        return int(self.value)     
+        return int(self.value) 
+
+class FS:
+    def __init__(self, value=None) -> None:
+        self.value = value
+
+    def get_value(self):
+        if self.value == None:
+            return None
+        return str.upper(self.value)        
