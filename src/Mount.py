@@ -9,6 +9,7 @@ class Mount:
         self._file_name = ""
         self._name = ""
         self.id = ""
+        self._tmp_partition = None
         self.tmp_mbr = MBR()
 
     def execute_mount(self):
@@ -52,7 +53,11 @@ class Mount:
         found_partition = False
         for partition in list_partitions:
             num_partitions += 1
+            if partition.part_type == "E":
+                if self._find_logic_partition(partition):
+                    return True
             if partition.part_name == self._name:
+                self._tmp_partition = partition
                 found_partition = True
                 break
         if not found_partition:
@@ -61,4 +66,28 @@ class Mount:
         self.tmp_mbr = tmp_mbr
         self.id = "56"+str(num_partitions)+self._file_name.removesuffix(".dsk")
         return True
+    
+    def _find_logic_partition(self, partition):
+        tmp_ebr = EBR()
+        num_partitions = 0
+        if partition.part_type == "E":
+            tmp_ebr = tmp_ebr.deserialize_ebr(bfm(self._path).read_binary_data(partition.part_start, struct.calcsize(tmp_ebr.FORMATEBR)))
+            if tmp_ebr is None:
+                return False
+            num_partitions += 1
+            if tmp_ebr.ebr_name == self._name:
+                self._tmp_partition = tmp_ebr
+                self.id = "56"+str(num_partitions)+self._file_name.removesuffix(".dsk")
+                return True
+            
+            while tmp_ebr.ebr_next != -1:
+                num_partitions += 1
+                tmp_ebr = tmp_ebr.deserialize_ebr(bfm(self._path).read_binary_data(tmp_ebr.ebr_next, struct.calcsize(tmp_ebr.FORMATEBR)))
+                if tmp_ebr is None:
+                    return False
+                if tmp_ebr.ebr_name == self._name:
+                    self._tmp_partition = tmp_ebr
+                    self.id = "56"+str(num_partitions)+self._file_name.removesuffix(".dsk")
+                    return True
+        return False
     
