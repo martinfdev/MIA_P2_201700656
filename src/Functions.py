@@ -3,6 +3,7 @@ import math
 import datetime
 import struct
 import os
+from src.Blocks import *
 class Functions:
     def __init__(self):
         self.RESET = '\033[0m'
@@ -79,4 +80,8 @@ class Functions:
         except OSError:
             print(OSError.args)
             print(f'{self.RED}WARNING {self.YELLOW} ya existe directorio {self.BLUE}{folder_path}{self.RESET}')
-            return False  
+            return False
+
+    def calculate_value_of_n(self, size_partition):
+        n = (size_partition - struct.calcsize(SuperBlock().FORMARTSUPERBOCK)) / (1 + 3 + struct.calcsize(Inode().FORMARTINODETABLE) + 3 * struct.calcsize(Content().FORMARTCONTENT)*4)
+        return math.floor(n)    
