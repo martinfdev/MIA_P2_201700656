@@ -18,6 +18,7 @@ class Mount:
         if not self._generateid():
             fn().err_msg("Mount", "No se pudo montar la partición "+str(self._name))
             return
+        fn().success_msg("Mount", "Se montó la partición "+str(self._name)+" con el id "+str(self.id))
         return self
 
     #set and check properties for mount
@@ -50,8 +51,8 @@ class Mount:
         list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2, tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
         found_partition = False
         for partition in list_partitions:
+            num_partitions += 1
             if partition.part_name == self._name:
-                num_partitions += 1
                 found_partition = True
                 break
         if not found_partition:
