@@ -9,6 +9,7 @@ from src.Rmdisk import Rmdisk
 from src.Fdisk import Fdisk
 from src.Mount import Mount
 from src.Unmount import Unmount
+from src.Mkfs import Mkfs
 from src.Rep import REP
 # reserve words
 reserve ={
@@ -28,6 +29,9 @@ reserve ={
     'mount':    'MOUNT',
     'unmount':  'UNMOUNT',
     'id':       'ID',
+    'mkfs':     'MKFS',
+    'fs':       'FS',
+    'pause':    'PAUSE'
 }
 
 tokens = [
@@ -137,6 +141,7 @@ def p_instruction(t):
                 |   print_comments
                 |   mount_instruction
                 |   unmount_instruction
+                |   mkfs_instruction
                 |   rep_instruction
     '''
     t[0] = t[1]
@@ -146,6 +151,11 @@ def p_instruction_error_0(t):
         instruction :   error
     '''
     print(f"{Functions().RED}Error Sintáctico {Functions().RESET}" + str(t[1].value) + " line: " + str(t.lineno(1)) + " column: " + str(find_column(input, t.slice[1])))
+    t[0] = ""
+
+def p_instruction_pause(t):
+    '''instruction : PAUSE'''
+    Functions().funct_to_pause()
     t[0] = ""
 
 def p_execute_instruction(t):
@@ -230,6 +240,26 @@ def p_unmount_instruction(t):
     Unmount(t[3]).execute_unmount(list_mount_partition)
     t[0] = ''
 
+def p_mkfs_instruction(t):
+    '''mkfs_instruction : MKFS ls_params_mkfs'''
+    Mkfs(t[2]).execute_mkfs(list_mount_partition)
+    t[0] = ""
+
+def p_ls_params_mkfs(t):
+    '''ls_params_mkfs       :   ls_params_mkfs param_mkfs
+                            |   param_mkfs'''
+    if len(t) == 3:
+        t[1].append(t[2])
+        t[0] = t[1]
+    else:
+        t[0] = [t[1]]
+
+def p_param_mkfs(t):
+    '''param_mkfs   :   DASH id_eq_id
+                    |   DASH type_eq_id
+                    |   DASH fs_eq_id'''
+    t[0] = t[2]        
+
 
 def p_rep_instruction(t):
     '''rep_instruction :    REP path_eq_pathdir'''
@@ -289,7 +319,11 @@ def p_print_comments(t):
 
 def p_id_eq_id(t):
     '''id_eq_id : ID EQUALTO IDENTIFIER'''
-    t[0] = ID(t[3])    
+    t[0] = ID(t[3])
+
+def p_fs_eq_id(t):
+    '''fs_eq_id : FS EQUALTO IDENTIFIER'''
+    t[0] = FS(t[3])
 # def p_error(t):
 #     if t:
 #         print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {}".format(
