@@ -91,3 +91,11 @@ class Mount:
                     return True
         return False
     
+    def get_partition(self):
+        return self._tmp_partition
+    
+    def get_mbr(self):
+        return self.tmp_mbr
+    
+    def get_path(self):
+        return self._path
