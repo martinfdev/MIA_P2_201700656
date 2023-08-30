@@ -69,7 +69,7 @@ class Mount:
     
     def _find_logic_partition(self, partition):
         tmp_ebr = EBR()
-        num_partitions = 0
+        num_partitions = 3
         if partition.part_type == "E":
             tmp_ebr = tmp_ebr.deserialize_ebr(bfm(self._path).read_binary_data(partition.part_start, struct.calcsize(tmp_ebr.FORMATEBR)))
             if tmp_ebr is None:
