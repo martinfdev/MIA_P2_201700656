@@ -69,7 +69,50 @@ class SuperBlock:
 
 class Inode:
     def __init__(self)->None:
-        self.FORMARTINODETABLE = "6i16ici"
+        self.FORMARTINODETABLE = "6i15ici"
+        self.i_uid = 0
+        self.i_gid = 0
+        self.i_size = 0
+        self.i_atime = 0
+        self.i_ctime = 0
+        self.i_mtime = 0
+        self.i_block = [0]*15 #15 pointers
+        self.i_type = '\0' #char
+        self.i_perm = 0
+
+    def set_values_inode(self, i_uid, i_gid, i_size, i_atime, i_ctime, i_mtime, i_block, i_type, i_perm):
+        if len(i_block) > 15:
+            print("Error al asignar valores al inodo, el numero de punteros no puede ser mayor a 15")
+            return self
+        self.i_uid = i_uid
+        self.i_gid = i_gid
+        self.i_size = i_size
+        self.i_atime = i_atime
+        self.i_ctime = i_ctime
+        self.i_mtime = i_mtime
+        self.i_block = i_block
+        self.i_type = i_type
+        self.i_perm = i_perm
+
+    def serialize_inode(self):
+        fns = fn()
+        return fns.serialize(self.FORMARTINODETABLE, self.i_uid, self.i_gid, self.i_size, self.i_atime, self.i_ctime, self.i_mtime, *self.i_block, self.i_type, self.i_perm)
+    
+    def deserialize_inode(self, data):
+        data = fn().deserialize(self.FORMARTINODETABLE, data)
+        if data is None:
+            print("Error al deserializar inodo")
+            return None
+        self.i_uid = data[0]
+        self.i_gid = data[1]
+        self.i_size = data[2]
+        self.i_atime = data[3]
+        self.i_ctime = data[4]
+        self.i_mtime = data[5]
+        self.i_block = data[6:21]
+        self.i_type = fn().bytes_to_string(data[21])
+        self.i_perm = data[22]
+        return self
 
 class BlockFolder:
     def __init__(self)->None:
