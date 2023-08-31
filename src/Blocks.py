@@ -2,7 +2,7 @@ from src.Functions import Functions as fn
 class SuperBlock:
     def __init__(self)->None:
         self.FORMATSUPERBLOCK = "17i"
-        self.s_filesystem_type = 0
+        self.s_filesystem_type = 0 #0 = EXT3 - 1 = EXT2
         self.s_inodes_count = 0
         self.s_blocks_count = 0
         self.s_free_blocks_count = 0
@@ -21,7 +21,7 @@ class SuperBlock:
         self.s_block_start = 0 #blocks start
    
     def set_values_super_block(self, s_filesystem_type, s_inodes_count, s_blocks_count, s_free_blocks_count, s_free_inodes_count, s_mtime, s_umtime, s_mnt_count, s_magic, s_inode_size, s_block_size, s_first_ino, s_first_blo, s_bm_inode_start, s_bm_block_start, s_inode_start, s_block_start):
-        self.s_filesystem_type = s_filesystem_type
+        self.s_filesystem_type = s_filesystem_type #0 = EXT3 - 1 = EXT2
         self.s_inodes_count = s_inodes_count
         self.s_blocks_count = s_blocks_count
         self.s_free_blocks_count = s_free_blocks_count
@@ -73,7 +73,7 @@ class Inode:
 
 class BlockFolder:
     def __init__(self)->None:
-        self.content = [] #4 content
+        self.content = [Content]*4 #4 content
 
 class Content:
     def __init__(self)->None:
@@ -100,9 +100,9 @@ class Bitmap:
 
     def serialize_bitmap(self, array_bitmap, size_bitmap):
         if len(array_bitmap) == 0:
+            self.size_bitmap = size_bitmap
             self._FORMATBITMAPINODE = str(self.size_bitmap) + self._FORMATBITMAPINODE
             self.array_bitmap = [b'0'] * self.size_bitmap
-            self.size_bitmap = size_bitmap
         else:
             self.size_bitmap = len(array_bitmap)
             self.array_bitmap = [fn().string_to_bytes(item) for item in array_bitmap]
@@ -121,4 +121,4 @@ class Bitmap:
             print("Error al deserializar bitmap de inodos")
             return None
         self.array_bitmap = [fn().bytes_to_string(item) for item in data]
-        return self.array_bitmap        
+        return self
