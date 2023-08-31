@@ -1,4 +1,5 @@
 from src.Functions import Functions as fn
+import struct
 class SuperBlock:
     def __init__(self)->None:
         self.FORMATSUPERBLOCK = "17i"
@@ -69,14 +70,14 @@ class SuperBlock:
 
 class Inode:
     def __init__(self)->None:
-        self.FORMARTINODETABLE = "6i15ici"
+        self.FORMARTINODETABLE = "6i16ici"
         self.i_uid = 0
         self.i_gid = 0
         self.i_size = 0
         self.i_atime = 0
         self.i_ctime = 0
         self.i_mtime = 0
-        self.i_block = [0]*15 #15 pointers
+        self.i_block = [-1]*16 #15 pointers
         self.i_type = '\0' #char
         self.i_perm = 0
 
@@ -116,20 +117,73 @@ class Inode:
 
 class BlockFolder:
     def __init__(self)->None:
-        self.content = [Content]*4 #4 content
+        self.content =  self.content = [Content() for _ in range(4)] #4 content
+
+    def serialize_block_folder(self):
+        data = b''
+        for item in self.content:
+            data += item.serialize_content()
+        return data
+    
+    def deserialize_block_folder(self, data):
+        if len(data) != 64:
+            print("Error al deserializar bloque de carpeta")
+            return None
+        tmp_content = Content()
+        for i in range(4):
+            self.content[i].deserialize_content(data[i*struct.calcsize(tmp_content.FORMARTCONTENT):(i+1)*struct.calcsize(tmp_content.FORMARTCONTENT)])
+        return self
 
 class Content:
     def __init__(self)->None:
         self.FORMARTCONTENT = "12si"
+        self.b_name = ""
+        self.b_inodo = -1
+
+    def serialize_content(self):
+        fns = fn()
+        return fns.serialize(self.FORMARTCONTENT, fns.string_to_bytes(self.b_name), self.b_inodo)
+
+    def deserialize_content(self, data):
+        data = fn().deserialize(self.FORMARTCONTENT, data)
+        if data is None:
+            print("Error al deserializar Contenido")
+            return None
+        self.b_name = fn().bytes_to_string(data[0])
+        self.b_inodo = data[1]
+        return self   
 
 class BlockFile:
     def __init__(self)->None:
         self.FORMATBLOCKFILE = "64s"
 
+    def serialize_block_file(self, data):
+        fns = fn()
+        return fns.serialize(self.FORMATBLOCKFILE, fns.string_to_bytes(data))
+
+    def deserialize_block_file(self, data):
+        data = fn().deserialize(self.FORMATBLOCKFILE, data)
+        if data is None:
+            print("Error al deserializar bloque de archivo")
+            return None
+        return fn().bytes_to_string(data[0])    
+
 class BlockPointer:
     def __init__(self)->None:
         self.FORMATBLOCKPOINTER = "16i"
         self.block_pointer = []
+
+    def serialeze_block_pointer(self):
+        fns = fn()
+        return fns.serialize(self.FORMATBLOCKPOINTER, *self.block_pointer)
+
+    def deserialize_block_pointer(self, data):
+        data = fn().deserialize(self.FORMATBLOCKPOINTER, data)
+        if data is None:
+            print("Error al deserializar bloque de punteros")
+            return None
+        self.block_pointer = data
+        return self    
 
 class Journaling:
     def __init__(self)->None:
