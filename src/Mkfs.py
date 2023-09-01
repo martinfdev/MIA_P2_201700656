@@ -119,6 +119,17 @@ class Mkfs:
         #bitmap block, new bitmap serialize array of 0 = []
         block_bitmap = Bitmap()
         bf.write_binary_data(block_bitmap.serialize_bitmap([], (value_of_n*3)), pos_init_value["bitmap_block"])
+        #inodes
+        first_inode = Inode()
+        size_inode = struct.calcsize(first_inode.FORMARTINODETABLE)
+        time_stamp = fns.get_time_stamp(fns.get_time_stamp_now())
+        list_pointers = [-1]*15
+        list_pointers[0] = pos_init_value["block"]
+        first_inode.set_values_inode(0, 0, size_inode, time_stamp, time_stamp, time_stamp, list_pointers, '1', 0)
+        bf.write_binary_data(first_inode.serialize_inode(), pos_init_value["inode"])
+        #blocks
+        first_block = BlockFolder()
+        bf.write_binary_data(first_block.serialize_block_folder(), pos_init_value["block"])
         return True
 
 
