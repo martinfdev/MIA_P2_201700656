@@ -70,14 +70,14 @@ class SuperBlock:
 
 class Inode:
     def __init__(self)->None:
-        self.FORMARTINODETABLE = "6i16ici"
+        self.FORMARTINODETABLE = "6i15ici"
         self.i_uid = 0
         self.i_gid = 0
         self.i_size = 0
         self.i_atime = 0
         self.i_ctime = 0
         self.i_mtime = 0
-        self.i_block = [-1]*16 #15 pointers
+        self.i_block = [-1]*15 #15 pointers
         self.i_type = '\0' #char
         self.i_perm = 0
 
@@ -97,7 +97,7 @@ class Inode:
 
     def serialize_inode(self):
         fns = fn()
-        return fns.serialize(self.FORMARTINODETABLE, self.i_uid, self.i_gid, self.i_size, self.i_atime, self.i_ctime, self.i_mtime, *self.i_block, self.i_type, self.i_perm)
+        return fns.serialize(self.FORMARTINODETABLE, self.i_uid, self.i_gid, self.i_size, self.i_atime, self.i_ctime, self.i_mtime, *self.i_block, fn().string_to_bytes(self.i_type), self.i_perm)
     
     def deserialize_inode(self, data):
         data = fn().deserialize(self.FORMARTINODETABLE, data)
@@ -111,8 +111,8 @@ class Inode:
         self.i_ctime = data[4]
         self.i_mtime = data[5]
         self.i_block = data[6:21]
-        self.i_type = fn().bytes_to_string(data[21])
-        self.i_perm = data[22]
+        self.i_type = fn().bytes_to_string(data[22])
+        self.i_perm = data[23]
         return self
 
 class BlockFolder:
@@ -171,9 +171,9 @@ class BlockFile:
 class BlockPointer:
     def __init__(self)->None:
         self.FORMATBLOCKPOINTER = "16i"
-        self.block_pointer = []
+        self.block_pointer = [-1]*16 #15 pointers
 
-    def serialeze_block_pointer(self):
+    def serialize_block_pointer(self):
         fns = fn()
         return fns.serialize(self.FORMATBLOCKPOINTER, *self.block_pointer)
 
