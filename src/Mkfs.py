@@ -28,7 +28,12 @@ class Mkfs:
             if not self._mkfs_2fs():
                 fn().err_msg("MKFS", "No se pudo formatear la partición "+str(self._id))
                 return
-       
+            
+        if self._fs == "3FS":
+            if not self._mkfs_3fs():
+                fn().err_msg("MKFS", "No se pudo formatear la partición "+str(self._id))
+                return
+        fn().success_msg("MKFS", "Se formateó la partición "+str(self._id)+" con exito.")
 
     def _set_values_props_mkfs(self):
         for param in self._list_params:
@@ -69,15 +74,23 @@ class Mkfs:
             if str(self._tmp_partition.part_type) == "E":   
                 fn().err_msg("MKFS", "No se puede formatear una partición extendida.")
                 return False
-        self._create_superblock(1)  #0 = EXT3 - 1 = EXT2   
-        # if self._tmp_partition!=None:
-        #     if str(self._tmp_partition.part_type) == "E":
-        #         fn().err_msg("MKFS", "No se puede formatear una partición extendida.")
-        #         return False
-        pass
+        if not self._create_superblock(1):  #0 = EXT3 - 1 = EXT2   
+            fn().err_msg("MKFS", "No se pudo crear el super bloque.")
+            return False
+        return True
 
     def _mkfs_3fs(self):
-        pass
+        if self._tmp_partition == None:
+            fn().err_msg("MKFS", "No se encontró la partición "+str(self._id))
+            return False
+        if isinstance(self._tmp_partition, Partition):
+            if str(self._tmp_partition.part_type) == "E":   
+                fn().err_msg("MKFS", "No se puede formatear una partición extendida.")
+                return False
+        if not self._create_superblock(0):  #0 = EXT3 - 1 = EXT2   
+            fn().err_msg("MKFS", "No se pudo crear el super bloque.")
+            return False
+        return True
 
     def _create_superblock(self, type_fs):
         new_super_block = SuperBlock()
@@ -88,22 +101,34 @@ class Mkfs:
         fns = fn()
         pos_init_value = {}
         if isinstance(self._tmp_partition, Partition):
-            value_of_n = fns.calculate_value_of_n(self._tmp_partition.part_size, new_super_block , inode, block)
+            if self._fs == "2FS":
+                value_of_n = fns.calculate_value_of_n(self._tmp_partition.part_size, new_super_block , inode, block)
+            if self._fs == "3FS":
+                value_of_n = fns.calculte_n_with_journaling(self._tmp_partition.part_size, Journaling(), new_super_block , inode, block)
             bitmap.size_bitmap = value_of_n
-            pos_init_value = self._first_pos(value_of_n, self._tmp_partition.part_start)
+            if self._fs == "2FS":
+                pos_init_value = self._first_pos(value_of_n, self._tmp_partition.part_start)
+            if self._fs == "3FS":
+                pos_init_value = self._first_pos_with_journaling(value_of_n, self._tmp_partition.part_start)
             if pos_init_value is None:
                 return False
-            print("primary partition", value_of_n)
-            print(pos_init_value)
+            #print("primary partition", value_of_n)
+            #print(pos_init_value)
         
         if isinstance(self._tmp_partition, EBR):
-            value_of_n = fns.calculate_value_of_n(self._tmp_partition.ebr_size, new_super_block , inode, block)
+            if self._fs == "2FS":           
+                value_of_n = fns.calculate_value_of_n(self._tmp_partition.ebr_size, new_super_block , inode, block)
+            if self._fs == "3FS":
+                value_of_n = fns.calculte_n_with_journaling(self._tmp_partition.ebr_size, Journaling(), new_super_block , inode, block)
             bitmap.size_bitmap = value_of_n
-            pos_init_value = self._first_pos(value_of_n, self._tmp_partition.ebr_start, struct.calcsize(EBR().FORMATEBR))
+            if self._fs == "2FS":
+                pos_init_value = self._first_pos(value_of_n, self._tmp_partition.ebr_start, struct.calcsize(EBR().FORMATEBR))
+            if self._fs == "3FS":
+                pos_init_value = self._first_pos_with_journaling(value_of_n, self._tmp_partition.ebr_start, struct.calcsize(EBR().FORMATEBR))
             if pos_init_value is None:
                 return False
-            print("logical partition", value_of_n)
-            print(pos_init_value)
+           # print("logical partition", value_of_n)
+           # print(pos_init_value)
         #typefs is int 0 = ext3, 1 = ext2
         if len(pos_init_value) == 0:
             return False
@@ -111,6 +136,10 @@ class Mkfs:
         new_super_block.set_values_super_block(type_fs, value_of_n, 3*value_of_n, 3*value_of_n, value_of_n, fns.get_time_stamp(fns.get_time_stamp_now()), fns.get_time_stamp(fns.get_time_stamp_now()), 1, 0xEF53, struct.calcsize(inode.FORMARTINODETABLE), struct.calcsize(block.FORMARTCONTENT)*4, pos_init_value["inode"], pos_init_value["block"], pos_init_value["bitmap_inode"], pos_init_value["bitmap_block"], pos_init_value["inode"], pos_init_value["block"])
 
         bf = bfm(self._tmp_path)
+
+        if self._fs == "3FS":
+            journaling = Journaling()
+            bf.write_binary_data(journaling.serialize_journaling(), pos_init_value["journaling"])
 
         bf.write_binary_data(new_super_block.serialize_super_block(), pos_init_value["super_block"])
         inode_bitmap = Bitmap()
@@ -141,3 +170,13 @@ class Mkfs:
         init_pos_value["inode"] = init_pos_value["bitmap_block"]+value_n*3
         init_pos_value["block"] = init_pos_value["inode"]+value_n*struct.calcsize(Inode().FORMARTINODETABLE)
         return init_pos_value     
+    
+    def _first_pos_with_journaling(self, value_n, part_start, size_ebr=0):
+        init_pos_value = {"super_block":0, "journaling": 0, "bitmap_inode": 0, "bitmap_block": 0, "inode": 0, "block": 0}
+        init_pos_value["super_block"] = part_start+size_ebr
+        init_pos_value["journaling"] = init_pos_value["super_block"]+struct.calcsize(SuperBlock().FORMATSUPERBLOCK)
+        init_pos_value["bitmap_inode"] = init_pos_value["journaling"]+struct.calcsize(Journaling().FORMATJOURNALING)*value_n
+        init_pos_value["bitmap_block"] = init_pos_value["bitmap_inode"]+value_n
+        init_pos_value["inode"] = init_pos_value["bitmap_block"]+value_n*3
+        init_pos_value["block"] = init_pos_value["inode"]+value_n*struct.calcsize(Inode().FORMARTINODETABLE)
+        return init_pos_value
