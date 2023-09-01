@@ -3,7 +3,6 @@ import math
 import datetime
 import struct
 import os
-from src.Blocks import *
 class Functions:
     def __init__(self):
         self.RESET = '\033[0m'
@@ -82,6 +81,13 @@ class Functions:
             print(f'{self.RED}WARNING {self.YELLOW} ya existe directorio {self.BLUE}{folder_path}{self.RESET}')
             return False
 
-    def calculate_value_of_n(self, size_partition):
-        n = (size_partition - struct.calcsize(SuperBlock().FORMARTSUPERBOCK)) / (1 + 3 + struct.calcsize(Inode().FORMARTINODETABLE) + 3 * struct.calcsize(Content().FORMARTCONTENT)*4)
-        return math.floor(n)    
+    def calculate_value_of_n(self, size_partition, super_block, inode, content):
+        n = (size_partition - struct.calcsize(super_block.FORMATSUPERBLOCK)) / (4 + struct.calcsize(inode.FORMARTINODETABLE) + 3 * struct.calcsize(content.FORMARTCONTENT)*4)
+        return math.floor(n)
+
+    def calculte_n_with_journaling(self, size_partition, journaling  ,super_block, inode, content):
+        n = (size_partition - struct.calcsize(super_block.FORMATSUPERBLOCK)) / (struct.calcsize(journaling.FORMATJOURNALING) +  4 + struct.calcsize(inode.FORMARTINODETABLE) + 3 * struct.calcsize(content.FORMARTCONTENT)*4)
+        return math.floor(n)
+
+    def funct_to_pause(self):
+        input("Presione enter para continuar...")     

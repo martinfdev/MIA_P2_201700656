@@ -187,7 +187,26 @@ class BlockPointer:
 
 class Journaling:
     def __init__(self)->None:
-        self.FORMATJOURNALING = "32s"                
+        self.FORMATJOURNALING = "16s16s64sI"
+        self.operation = "0"
+        self.path = "0"
+        self.cotent = "0"
+        self.date = 0                
+
+    def serialize_journaling(self):
+        fns = fn()
+        return fns.serialize(self.FORMATJOURNALING, fns.string_to_bytes(self.operation), fns.string_to_bytes(self.path), fns.string_to_bytes(self.cotent), self.date)
+    
+    def deserialize_journaling(self, data):
+        data = fn().deserialize(self.FORMATJOURNALING, data)
+        if data is None:
+            print("Error al deserializar journaling")
+            return None
+        self.operation = fn().bytes_to_string(data[0])
+        self.path = fn().bytes_to_string(data[1])
+        self.cotent = fn().bytes_to_string(data[2])
+        self.date = data[3]
+        return self
 
 class Bitmap:
     def __init__(self)->None:
