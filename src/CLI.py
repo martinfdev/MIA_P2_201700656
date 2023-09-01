@@ -31,7 +31,19 @@ reserve ={
     'id':       'ID',
     'mkfs':     'MKFS',
     'fs':       'FS',
-    'pause':    'PAUSE'
+    'pause':    'PAUSE',
+    'mkdir':    'MKDIR',
+    'mkfile':   'MKFILE',
+    'rmdir':    'RMDIR',
+    'cat':      'CAT',
+    'rem':      'REM',
+    'edit':     'EDIT',
+    'ren':      'REN',
+    'mv':       'MV',
+    'find':     'FIND',
+    'chown':    'CHOWN',
+    'chgrp':    'CHGRP',
+
 }
 
 tokens = [
@@ -143,6 +155,7 @@ def p_instruction(t):
                 |   unmount_instruction
                 |   mkfs_instruction
                 |   rep_instruction
+                |   mkdir_instruction
     '''
     t[0] = t[1]
 
@@ -260,6 +273,24 @@ def p_param_mkfs(t):
                     |   DASH fs_eq_id'''
     t[0] = t[2]        
 
+def p_mkdir_instruction(t):
+    '''mkdir_instruction    :   MKDIR ls_params_mkdir'''
+    t[0] = ""
+
+def p_ls_params_mkdir(t):
+    '''ls_params_mkdir      :   ls_params_mkdir param_mkdir
+                            |   param_mkdir'''
+    if len(t) == 3:
+        t[1].append(t[2])
+        t[0] = t[1]
+    else:
+        t[0] = [t[1]]
+
+def p_param_mkdir(t):
+    '''param_mkdir  :   DASH path_eq_pathdir
+                    |   DASH IDENTIFIER
+    '''
+    t[0] = t[2]     
 
 def p_rep_instruction(t):
     '''rep_instruction :    REP path_eq_pathdir'''
@@ -281,6 +312,10 @@ def p_path_eq_pathdir(t):
         elif directory == None:
             raise Exception("Error Sintáctico: Path inválido")
         t[0] = Path(directory.group(0), file_name.group(1))    
+
+def p_path_eq_pathdir_id(t):
+    '''path_eq_pathdir  : PATH EQUALTO PATH_DIRECTORY IDENTIFIER'''
+    t[0] = Path(t[3]+t[4], "")
 
 def p_size_eq_intnum(t):
     '''size_eq_intnum : SIZE EQUALTO INTNUM'''
