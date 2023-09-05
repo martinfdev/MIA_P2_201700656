@@ -44,6 +44,13 @@ class Fdisk:
             if not self._check_exist_partition_with_name(list_partition, self._name):
                 fn.err_msg("FDISK", "delete no existe la partición con el nombre "+fn.RED+str(self._name))
                 return
+            else: 
+                input_val =  input("Desea eliminar la partición "+fn.RED+str(self._name)+"? (S/N): ")
+                if input_val == 'S' or input_val == 's':
+                    pass
+                else:
+                    fn.err_msg("FDISK", "No se eliminó la partición "+fn.RED+str(self._name))
+                    return
             if not self._delete_partition(list_partition):
                 fn.err_msg("FDISK", "delte no se pudo eliminar la partición "+fn.RED+str(self._name))
                 return
