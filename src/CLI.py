@@ -43,7 +43,7 @@ reserve ={
     'find':     'FIND',
     'chown':    'CHOWN',
     'chgrp':    'CHGRP',
-
+    'ruta':     'RUTA',
 }
 
 tokens = [
@@ -84,7 +84,7 @@ def t_PATH_DIRECTORY(t):
     return t
 
 def t_FILENAME(t):
-    r'[a-zA-Z0-9_]+\.(adsj|dsk)' 
+    r'[a-zA-Z0-9_]+\.(adsj|dsk|txt|jpg|png|pdf|svg)' 
     return t
 
 def t_STRING(t):
@@ -293,9 +293,26 @@ def p_param_mkdir(t):
     t[0] = t[2]     
 
 def p_rep_instruction(t):
-    '''rep_instruction :    REP path_eq_pathdir'''
+    '''rep_instruction :    REP ls_params_rep'''
     REP(t[2]).execute_rep()
     t[0] = ""
+
+def p_ls_params_rep(t):
+    '''ls_params_rep        :   ls_params_rep param_rep
+                            |   param_rep'''
+    if len(t) == 3:
+        t[1].append(t[2])
+        t[0] = t[1]
+    else:
+        t[0] = [t[1]]
+
+def p_param_rep(t):
+    '''param_rep    :   DASH name_eq_id2
+                    |   DASH id_eq_id
+                    |   DASH path_eq_pathdir
+                    |   DASH ruta_eq_pathdir
+    '''
+    t[0] = t[2]            
 
 def p_path_eq_pathdir(t):
     '''path_eq_pathdir  : PATH EQUALTO PATH_DIRECTORY FILENAME
@@ -334,6 +351,11 @@ def p_name_eq_id(t):
                     |   NAME EQUALTO STRING'''
     t[0] = ID(t[3])
 
+def p_name_eq_id2(t):
+    '''name_eq_id2  :   NAME EQUALTO IDENTIFIER
+                    |   NAME EQUALTO STRING'''
+    t[0] = {"name": ID(t[3])}
+
 def p_type_eq_id(t):
     '''type_eq_id : TYPE EQUALTO IDENTIFIER'''
     t[0] = Type(t[3])
@@ -359,6 +381,10 @@ def p_id_eq_id(t):
 def p_fs_eq_id(t):
     '''fs_eq_id : FS EQUALTO IDENTIFIER'''
     t[0] = FS(t[3])
+
+def p_ruta_eq_pathdir(t):
+    '''ruta_eq_pathdir : RUTA EQUALTO PATH_DIRECTORY'''
+    t[0] = {"ruta": t[3]}    
 # def p_error(t):
 #     if t:
 #         print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {}".format(
