@@ -64,50 +64,116 @@ class REP:
              return
         tmp_mbr.deserialize_mbr(binary_data_mbr)
         list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2, tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
-        print(list_partitions)
-        
-        
-        
-        
-        # # for partition in list_partitions:
-        # #     if partition.part_name != "\0":
-        # #         print("=============REP MBR=============")
-        # #         print("Nombre: "+partition.part_name)
-        # #         print("Status: "+partition.part_status)
-        # #         print("Type: "+partition.part_type)
-        # #         print("Fit: "+partition.part_fit)
-        # #         print("Start: "+str(partition.part_start))
-        # #         print("Size: "+str(partition.part_size))
+        digraph = Digraph(format='svg', node_attr={"rankdir": "LR"})
+        digraph.node(f'''REPORTE MBR''', label=f'''<<TABLE>
+                    <TR>
+                    <TD BGCOLOR="green" WIDTH="5">MBR</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">mbr_tamano: {tmp_mbr.mbr_tamano}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">mbr_fecha_creacion: {tmp_mbr.mbr_time_stamp}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">mbr_disk_signature: {tmp_mbr.mbr_disk_signature}</TD>
+                    </TR>
+                    </TABLE>>''', shape="none")
+        for partition in list_partitions:
+            if partition.part_status != "\0":
+                digraph.node(f'''{partition.part_name}''', label=f'''<<TABLE>
+                    <TR>
+                    <TD BGCOLOR="#3BB6E7C9" WIDTH="5">PARTICION</TD>
+                    <TD BGCOLOR="#3BB6E7C9" WIDTH="5">{partition.part_type}</TD>
+                    </TR>         
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_name</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{partition.part_name}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_status</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{partition.part_status}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_type</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{partition.part_type}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_fit</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{partition.part_fit}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_start</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{partition.part_start}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_size</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{partition.part_size}</TD>
+                    </TR>
+                    </TABLE>>''', shape="none")
+        #digraph.render('mbr',  view=True)
+        existExtendedPartition = False
+        tmp_extended_partition = None
+        for partition in list_partitions:
+            if partition.part_type == "E":
+                existExtendedPartition = True
+                tmp_extended_partition = partition
+                break
+        list_ebr = []
+        tmp_ebr = EBR()
+        if existExtendedPartition and tmp_extended_partition is not None:
+            data_ebr = bfm(tmp_path).read_binary_data(tmp_extended_partition.part_start, struct.calcsize(tmp_ebr.FORMATEBR))
+            if data_ebr is None:
+                fn().err_msg("REP", "No se pudo leer el EBR")
+                return
+            tmp_ebr.deserialize_ebr(data_ebr)
+            list_ebr.append(tmp_ebr)
 
-        # size_disk = tmp_mbr.mbr_tamano
-        # free_space = 0
+            while tmp_ebr.ebr_next != -1:
+                data_ebr = bfm(tmp_path).read_binary_data(tmp_ebr.ebr_next, struct.calcsize(tmp_ebr.FORMATEBR))
+                if data_ebr is None:
+                    fn().err_msg("REP", "No se pudo leer el EBR")
+                    return
+                tmp_ebr = EBR()
+                tmp_ebr.deserialize_ebr(data_ebr)
+                list_ebr.append(tmp_ebr)
+        for ebr in list_ebr:
+            digraph.node(f'''{ebr.ebr_name}''', label=f'''<<TABLE>
+                    <TR>
+                    <TD BGCOLOR="#3BB6E7C9" WIDTH="5">PARTICION</TD>
+                    <TD BGCOLOR="#3BB6E7C9" WIDTH="5">LOGICA</TD>
+                    </TR>         
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_name</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{ebr.ebr_name}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_status</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{ebr.ebr_status}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_fit</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{ebr.ebr_fit}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_start</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{ebr.ebr_start}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_size</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{ebr.ebr_size}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">part_next</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{ebr.ebr_next}</TD>
+                    </TR>
+                    </TABLE>>''', shape="none")
+        digraph.render('mbr',  view=True)
 
-        # list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2,
-        #                    tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
-        # for partition in list_partitions:
-        #     if partition.part_type != "\0":
-        #         free_space += partition.part_size
-        # free_space = size_disk - free_space
-        # text_td = ""
-        # for partition in list_partitions:
-        #     if partition.part_status != "\0":
-        #         text_td += f'''
-        #            <TD BGCOLOR="yellow" WIDTH="5">{partition.part_name}<BR/>Tamaño: {partition.part_size}</TD>
-        #           '''
-        # if free_space > 0:
-        #     text_td += f'''
-        #            <TD BGCOLOR="gray" WIDTH="5">Libre<BR/>{free_space}</TD>
-        #           '''
 
-        # graph = Digraph(format='svg', node_attr={"rankdir": "LR"})
-        # graph.node("table", label=f'''<<TABLE>
-        #           <TR>
-        #            <TD BGCOLOR="green" WIDTH="5">MBR</TD>
-        #             {text_td}
-        #           </TR>
-        #           </TABLE>>''', shape="none")
-        # #render graph
-        # graph.render('disck',  view=True)
+
+
+        
 
     def _find_partition(self, listMounts):
         for mount in listMounts:
