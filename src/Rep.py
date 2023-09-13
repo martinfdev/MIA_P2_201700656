@@ -13,41 +13,62 @@ class REP:
         self.output_path = ""
         self.id = ""
         self.path_file_ls = ""
+        self._tmp_partition = None
 
-
-    def execute_rep(self):
-        pass
+    def execute_rep(self, list_mounts):
+        if not self._set_params():
+            return
+        if not self._find_partition(list_mounts):
+            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            return
+        if self.name == "mbr":
+            self._mbr()
         
+            
     def _set_params(self):
         for param in self.params:
             if isinstance(param, Path):
-                self.path = param
+                self.path = param.get_value()
             elif isinstance(param, ID):
-                self.id = param
-       
-       
-       
-       
-       
-       
-       
-        # tmp_path = ""
-        # if type(self.path) is Path:
-        #     tmp_path = self.path.get_value()
-        # else:
-        #     fn().err_msg("REP", "No se especificó el parámetro obligatorio PATH")
-        #     return
+                self.id = param.get_value()
+            elif param['name']:
+                self.name = param['name'].get_value()
+            elif param['ruta']:
+                self.path_file_ls = param['ruta'].get_value()
 
-        # tmp_mbr = MBR()
-        # total_bytes_to_read = struct.calcsize(
-        #     tmp_mbr.FORMATMBR) + struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
-        # binary_data_mbr = bfm(tmp_path).read_binary_data(
-        #     0, total_bytes_to_read)
-        # if binary_data_mbr is None:
-        #     fn().err_msg("REP", "No se pudo leer el MBR")
-        #     return
-        # tmp_mbr.deserialize_mbr(binary_data_mbr)
-        # # list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2, tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
+        if self.id == "":
+            fn().err_msg("REP", "No se especificó el parámetro obligatorio ID")
+            return False
+        if self.name == "":
+            fn().err_msg("REP", "No se especificó el parámetro obligatorio NAME")
+            return False
+        if self.path == "":
+            fn().err_msg("REP", "No se especificó el parámetro obligatorio PATH")
+            return False            
+        return True
+
+
+       
+    def _mbr(self):
+        if self._tmp_partition is None:
+            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            return False
+        tmp_path = self._tmp_partition.get_path()
+        tmp_mbr = MBR()
+        total_bytes_to_read = struct.calcsize(
+        tmp_mbr.FORMATMBR) + struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
+        binary_data_mbr = bfm(tmp_path).read_binary_data(
+             0, total_bytes_to_read)
+        if binary_data_mbr is None:
+             fn().err_msg("REP", "No se pudo leer el MBR")
+             return
+        tmp_mbr.deserialize_mbr(binary_data_mbr)
+        list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2, tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
+        print(list_partitions)
+        
+        
+        
+        
         # # for partition in list_partitions:
         # #     if partition.part_name != "\0":
         # #         print("=============REP MBR=============")
@@ -87,3 +108,10 @@ class REP:
         #           </TABLE>>''', shape="none")
         # #render graph
         # graph.render('disck',  view=True)
+
+    def _find_partition(self, listMounts):
+        for mount in listMounts:
+            if mount.id == self.id:
+                self._tmp_partition = mount
+                return True
+        return False
