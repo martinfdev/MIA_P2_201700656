@@ -294,7 +294,7 @@ def p_param_mkdir(t):
 
 def p_rep_instruction(t):
     '''rep_instruction :    REP ls_params_rep'''
-    REP(t[2]).execute_rep()
+    REP(t[2]).execute_rep(list_mount_partition)
     t[0] = ""
 
 def p_ls_params_rep(t):
