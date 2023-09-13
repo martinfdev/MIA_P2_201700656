@@ -11,6 +11,8 @@ class REP:
         self.params = list_params
         self.name = ""
         self.output_path = ""
+        self.output_path_folder = ""
+        self.file_name = ""
         self.id = ""
         self.path_file_ls = ""
         self._tmp_partition = None
@@ -21,6 +23,8 @@ class REP:
         if not self._find_partition(list_mounts):
             fn().err_msg("REP", "No se encontró la partición con el ID especificado")
             return
+        self._create_directory()
+        
         if self.name == "mbr":
             self._mbr()
         
@@ -28,7 +32,9 @@ class REP:
     def _set_params(self):
         for param in self.params:
             if isinstance(param, Path):
-                self.path = param.get_value()
+                self.output_path = param.get_value()
+                self.output_path_folder = param.path
+                self.file_name = param.filename
             elif isinstance(param, ID):
                 self.id = param.get_value()
             elif param['name']:
@@ -42,7 +48,7 @@ class REP:
         if self.name == "":
             fn().err_msg("REP", "No se especificó el parámetro obligatorio NAME")
             return False
-        if self.path == "":
+        if self.output_path == "":
             fn().err_msg("REP", "No se especificó el parámetro obligatorio PATH")
             return False            
         return True
@@ -168,9 +174,13 @@ class REP:
                     <TD BGCOLOR="yellow" WIDTH="5">{ebr.ebr_next}</TD>
                     </TR>
                     </TABLE>>''', shape="none")
-        digraph.render('mbr',  view=True)
+        digraph.render(filename=self.file_name, directory=self.output_path_folder)
 
-
+    def _create_directory(self):
+        if not fn().check_status_folder(self.output_path_folder):
+            return fn().create_folder(self.output_path_folder)
+        return False
+       
 
 
         
