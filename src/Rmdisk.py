@@ -15,7 +15,13 @@ class Rmdisk:
         else:
             fn.err_msg("RMDISK", "No se pudo eliminar el disco")
             return
-           
+
+        print("RMDISK", "¿Está seguro que desea eliminar el disco "+fn.YELLOW+self._file_name+fn.YELLOW+"? [Y/N]: ")
+        answer = input()
+        if answer == "Y" or answer == "y":
+            pass
+        else:
+            return
         if fn.check_status_file(self._folders_dir+self._file_name):
             try:
                 os.remove(self._folders_dir+self._file_name)
