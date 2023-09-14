@@ -11,6 +11,7 @@ from src.Mount import Mount
 from src.Unmount import Unmount
 from src.Mkfs import Mkfs
 from src.Rep import REP
+from src.Login import Login
 # reserve words
 reserve ={
     'execute': 	'EXECUTE',
@@ -44,6 +45,9 @@ reserve ={
     'chown':    'CHOWN',
     'chgrp':    'CHGRP',
     'ruta':     'RUTA',
+    'pass':    'PASS',
+    'user':    'USER',
+    'login':    'LOGIN',
 }
 
 tokens = [
@@ -156,6 +160,7 @@ def p_instruction(t):
                 |   mkfs_instruction
                 |   rep_instruction
                 |   mkdir_instruction
+                |   login_instruction
     '''
     t[0] = t[1]
 
@@ -314,6 +319,27 @@ def p_param_rep(t):
     '''
     t[0] = t[2]            
 
+def p_login_instruction(t):
+    '''login_instruction :   LOGIN ls_params_login'''
+    Login(t[2]).execute_login(list_mount_partition)
+    t[0] = ""
+
+def p_ls_params_login(t):
+    '''ls_params_login      :   ls_params_login param_login
+                            |   param_login'''
+    if len(t) == 3:
+        t[1].append(t[2])
+        t[0] = t[1]
+    else:
+        t[0] = [t[1]]
+
+def p_param_login(t):
+    '''param_login  :   DASH id_eq_id
+                    |   DASH user_eq_id
+                    |   DASH pwd_eq_id
+    '''
+    t[0] = t[2]        
+
 def p_path_eq_pathdir(t):
     '''path_eq_pathdir  : PATH EQUALTO PATH_DIRECTORY FILENAME
                         | PATH EQUALTO STRING'''
@@ -384,7 +410,15 @@ def p_fs_eq_id(t):
 
 def p_ruta_eq_pathdir(t):
     '''ruta_eq_pathdir : RUTA EQUALTO PATH_DIRECTORY'''
-    t[0] = {"ruta": t[3]}    
+    t[0] = {"ruta": t[3]}
+
+def p_user_eq_id(t):
+    '''user_eq_id : USER EQUALTO IDENTIFIER'''
+    t[0] = User(t[3])
+
+def p_pwd_eq_id(t):
+    '''pwd_eq_id : PASS EQUALTO IDENTIFIER'''
+    t[0] = Pwd(t[3])            
 # def p_error(t):
 #     if t:
 #         print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {}".format(
