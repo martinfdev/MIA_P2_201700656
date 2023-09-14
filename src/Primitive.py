@@ -82,4 +82,12 @@ class FS:
     def get_value(self):
         if self.value == None:
             return None
-        return str.upper(self.value)        
+        return str.upper(self.value)
+
+class User:
+    def __init__(self, value=None) -> None:
+        self.value = value          
+
+class Pwd:
+    def __init__(self, value=None) -> None:
+        self.value = value         
