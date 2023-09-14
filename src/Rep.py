@@ -25,8 +25,10 @@ class REP:
             return
         self._create_directory()
         
-        if self.name == "mbr":
+        if self.name.lower() == "mbr":
             self._mbr()
+        if self.name.lower() == "disk":
+            self._disk()    
         
             
     def _set_params(self):
@@ -52,9 +54,7 @@ class REP:
             fn().err_msg("REP", "No se especificó el parámetro obligatorio PATH")
             return False            
         return True
-
-
-       
+   
     def _mbr(self):
         if self._tmp_partition is None:
             fn().err_msg("REP", "No se encontró la partición con el ID especificado")
@@ -180,10 +180,6 @@ class REP:
         if not fn().check_status_folder(self.output_path_folder):
             return fn().create_folder(self.output_path_folder)
         return False
-       
-
-
-        
 
     def _find_partition(self, listMounts):
         for mount in listMounts:
@@ -191,3 +187,65 @@ class REP:
                 self._tmp_partition = mount
                 return True
         return False
+    
+    def _disk(self):
+        if self._tmp_partition is None:
+            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            return False
+        tmp_path = self._tmp_partition.get_path()
+        tmp_mbr = MBR()
+        total_bytes_to_read = struct.calcsize(
+        tmp_mbr.FORMATMBR) + struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
+        binary_data_mbr = bfm(tmp_path).read_binary_data(
+             0, total_bytes_to_read)
+        if binary_data_mbr is None:
+             fn().err_msg("REP", "No se pudo leer el MBR")
+             return
+        tmp_mbr.deserialize_mbr(binary_data_mbr)
+        list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2, tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
+
+        free_space = 0
+        for partition in list_partitions:
+            if partition.part_status == "\0":
+                free_space += partition.part_size
+        
+        
+        label = "MBR"
+
+        for partition in list_partitions:
+            if partition.part_status != "\0":
+                if partition.part_type == "E":
+                    label += '''|{<f0> EXTENDIDA'''
+                    current_ebr = EBR()
+                    data_ebr = bfm(tmp_path).read_binary_data(partition.part_start, struct.calcsize(current_ebr.FORMATEBR))
+                    if data_ebr is None:
+                        fn().err_msg("REP", "No se pudo leer el EBR")
+                        return
+                    current_ebr.deserialize_ebr(data_ebr)
+                    label += '''|{<f0>EBR|'''
+                    label += f'''{current_ebr.ebr_name}'''
+                    while current_ebr.ebr_next != -1:
+                        data_ebr = bfm(tmp_path).read_binary_data(current_ebr.ebr_next, struct.calcsize(current_ebr.FORMATEBR))
+                        if data_ebr is None:
+                            fn().err_msg("REP", "No se pudo leer el EBR")
+                            return
+                        current_ebr = EBR()
+                        current_ebr.deserialize_ebr(data_ebr)
+                        label += f'''|EBR|<f0> {current_ebr.ebr_name}'''
+                    label += ''''}}'''        
+                else:
+                    label += f'''|<f0> {partition.part_name}'''    
+            else:
+                label += f'''|<f0> LIBRE'''
+        
+        label += f'''|<f0> LIBRE'''
+
+        print(label)
+        digraph = Digraph(format='svg', node_attr={"rankdir": "LR"})
+        disk = Digraph(name="cluster0", node_attr={"color": "blue"})
+        
+        disk.node(name="disk", shape="record", label=label)
+        digraph.subgraph(disk)
+
+        digraph.render(filename=self.file_name, directory=self.output_path_folder)
+                     
