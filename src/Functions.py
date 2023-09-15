@@ -90,4 +90,23 @@ class Functions:
         return math.floor(n)
 
     def funct_to_pause(self):
-        input("Presione enter para continuar...")     
+        input("Presione enter para continuar...")
+
+    #UGO = user, group, other
+    def get_permission(self, permission):
+        user_permission = permission//100
+        group_permission = (permission%100)//10
+        other_permission = permission%10
+
+        print(user_permission, group_permission, other_permission)
+        binary_permission = bin(user_permission)[2:].zfill(3)+bin(group_permission)[2:].zfill(3)+bin(other_permission)[2:].zfill(3)
+
+        user_permission = binary_permission[:3]
+        group_permission = binary_permission[3:6]
+        other_permission = binary_permission[6:]
+
+        user_permission = ['r' if user_permission[0] == '1' else '-', 'w' if user_permission[1] == '1' else '-', 'x' if user_permission[2] == '1' else '-']
+        group_permission = ['r' if group_permission[0] == '1' else '-', 'w' if group_permission[1] == '1' else '-', 'x' if group_permission[2] == '1' else '-']
+        other_permission = ['r' if other_permission[0] == '1' else '-', 'w' if other_permission[1] == '1' else '-', 'x' if other_permission[2] == '1' else '-']
+        
+        return user_permission, group_permission, other_permission
