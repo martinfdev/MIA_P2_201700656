@@ -240,7 +240,7 @@ class REP:
         
         label += f'''|<f0> LIBRE'''
 
-        print(label)
+        # print(label)
         digraph = Digraph(format='svg', node_attr={"rankdir": "LR"})
         disk = Digraph(name="cluster0", node_attr={"color": "blue"})
         
