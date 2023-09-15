@@ -5,7 +5,7 @@ from src.Primitive import *
 import struct
 from graphviz import Digraph
 from src.Blocks import *
-
+import math
 
 class REP:
     def __init__(self, list_params) -> None:
@@ -282,7 +282,31 @@ class REP:
             return
         super_block = SuperBlock()
         super_block.deserialize_super_block(binary_data)
-        print(super_block)
+        binary_data_bm_inode = bfm(self._tmp_partition.get_path()).read_binary_data(
+            super_block.s_bm_inode_start, super_block.s_inodes_count)
+        bm_inode = Bitmap()
+        bm_inode.deserialize_bitmap(binary_data_bm_inode, super_block.s_inodes_count)
+        array_bitmap = bm_inode.array_bitmap
+        dimesion = int(math.sqrt(super_block.s_inodes_count))
+        label = ""
+        count = 0
+        for i in range(dimesion):
+            label += f'''<TR>'''
+            for j in range(dimesion):
+                label += f'''<TD BGCOLOR="gray" WIDTH="5">{array_bitmap[count]}</TD>'''
+                count += 1
+            label += f'''</TR>'''   
+                
+        graph = Digraph(format='svg', node_attr={"rankdir": "LR"})
+        graph.node(f'''REPORTE Bitmap Inodos''', label=f'''<<TABLE>
+                    <TR>
+                    <TD BGCOLOR="green" WIDTH="5">REPORTE Bitmap Inodos</TD>
+                    <TD BGCOLOR="green" WIDTH="5">{self._tmp_partition._tmp_partition.part_name}</TD>
+                    </TR>
+                    {label}
+                    </TABLE>>''', shape="none")
+        graph.render(filename=self.file_name, directory=self.output_path_folder)
+        
 
     def _rep_block(self):
         if self._tmp_partition is None:
@@ -375,3 +399,4 @@ class REP:
                     </TABLE>>''', shape="none")
         graph.render(filename=self.file_name,
                      directory=self.output_path_folder)
+
