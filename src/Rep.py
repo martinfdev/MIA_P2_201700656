@@ -4,6 +4,7 @@ from src.UtilClass import *
 from src.Primitive import *
 import struct
 from graphviz import Digraph
+from src.Blocks import *
 
 
 class REP:
@@ -24,13 +25,24 @@ class REP:
             fn().err_msg("REP", "No se encontró la partición con el ID especificado")
             return
         self._create_directory()
-        
+
         if self.name.lower() == "mbr":
             self._mbr()
+            return
         if self.name.lower() == "disk":
-            self._disk()    
-        
-            
+            self._disk()
+            return
+        if self.name.lower() == "bm_inode":
+            self._rep_bm_inode()
+            return
+
+        if self.name.lower() == "bm_block":
+            return
+
+        if self.name.lower() == "block":
+            self._rep_block()
+            return
+
     def _set_params(self):
         for param in self.params:
             if isinstance(param, Path):
@@ -52,9 +64,9 @@ class REP:
             return False
         if self.output_path == "":
             fn().err_msg("REP", "No se especificó el parámetro obligatorio PATH")
-            return False            
+            return False
         return True
-   
+
     def _mbr(self):
         if self._tmp_partition is None:
             fn().err_msg("REP", "No se encontró la partición con el ID especificado")
@@ -62,14 +74,15 @@ class REP:
         tmp_path = self._tmp_partition.get_path()
         tmp_mbr = MBR()
         total_bytes_to_read = struct.calcsize(
-        tmp_mbr.FORMATMBR) + struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
+            tmp_mbr.FORMATMBR) + struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
         binary_data_mbr = bfm(tmp_path).read_binary_data(
-             0, total_bytes_to_read)
+            0, total_bytes_to_read)
         if binary_data_mbr is None:
-             fn().err_msg("REP", "No se pudo leer el MBR")
-             return
+            fn().err_msg("REP", "No se pudo leer el MBR")
+            return
         tmp_mbr.deserialize_mbr(binary_data_mbr)
-        list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2, tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
+        list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2,
+                           tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
         digraph = Digraph(format='svg', node_attr={"rankdir": "LR"})
         digraph.node(f'''REPORTE MBR''', label=f'''<<TABLE>
                     <TR>
@@ -117,7 +130,7 @@ class REP:
                     <TD BGCOLOR="yellow" WIDTH="5">{partition.part_size}</TD>
                     </TR>
                     </TABLE>>''', shape="none")
-        #digraph.render('mbr',  view=True)
+        # digraph.render('mbr',  view=True)
         existExtendedPartition = False
         tmp_extended_partition = None
         for partition in list_partitions:
@@ -128,7 +141,8 @@ class REP:
         list_ebr = []
         tmp_ebr = EBR()
         if existExtendedPartition and tmp_extended_partition is not None:
-            data_ebr = bfm(tmp_path).read_binary_data(tmp_extended_partition.part_start, struct.calcsize(tmp_ebr.FORMATEBR))
+            data_ebr = bfm(tmp_path).read_binary_data(
+                tmp_extended_partition.part_start, struct.calcsize(tmp_ebr.FORMATEBR))
             if data_ebr is None:
                 fn().err_msg("REP", "No se pudo leer el EBR")
                 return
@@ -136,7 +150,8 @@ class REP:
             list_ebr.append(tmp_ebr)
 
             while tmp_ebr.ebr_next != -1:
-                data_ebr = bfm(tmp_path).read_binary_data(tmp_ebr.ebr_next, struct.calcsize(tmp_ebr.FORMATEBR))
+                data_ebr = bfm(tmp_path).read_binary_data(
+                    tmp_ebr.ebr_next, struct.calcsize(tmp_ebr.FORMATEBR))
                 if data_ebr is None:
                     fn().err_msg("REP", "No se pudo leer el EBR")
                     return
@@ -174,7 +189,8 @@ class REP:
                     <TD BGCOLOR="yellow" WIDTH="5">{ebr.ebr_next}</TD>
                     </TR>
                     </TABLE>>''', shape="none")
-        digraph.render(filename=self.file_name, directory=self.output_path_folder)
+        digraph.render(filename=self.file_name,
+                       directory=self.output_path_folder)
 
     def _create_directory(self):
         if not fn().check_status_folder(self.output_path_folder):
@@ -187,7 +203,7 @@ class REP:
                 self._tmp_partition = mount
                 return True
         return False
-    
+
     def _disk(self):
         if self._tmp_partition is None:
             fn().err_msg("REP", "No se encontró la partición con el ID especificado")
@@ -195,21 +211,21 @@ class REP:
         tmp_path = self._tmp_partition.get_path()
         tmp_mbr = MBR()
         total_bytes_to_read = struct.calcsize(
-        tmp_mbr.FORMATMBR) + struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
+            tmp_mbr.FORMATMBR) + struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
         binary_data_mbr = bfm(tmp_path).read_binary_data(
-             0, total_bytes_to_read)
+            0, total_bytes_to_read)
         if binary_data_mbr is None:
-             fn().err_msg("REP", "No se pudo leer el MBR")
-             return
+            fn().err_msg("REP", "No se pudo leer el MBR")
+            return
         tmp_mbr.deserialize_mbr(binary_data_mbr)
-        list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2, tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
+        list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2,
+                           tmp_mbr.mbr_partition_3, tmp_mbr.mbr_partition_4]
 
         free_space = 0
         for partition in list_partitions:
             if partition.part_status == "\0":
                 free_space += partition.part_size
-        
-        
+
         label = "MBR"
 
         for partition in list_partitions:
@@ -217,7 +233,8 @@ class REP:
                 if partition.part_type == "E":
                     label += '''|{<f0> EXTENDIDA'''
                     current_ebr = EBR()
-                    data_ebr = bfm(tmp_path).read_binary_data(partition.part_start, struct.calcsize(current_ebr.FORMATEBR))
+                    data_ebr = bfm(tmp_path).read_binary_data(
+                        partition.part_start, struct.calcsize(current_ebr.FORMATEBR))
                     if data_ebr is None:
                         fn().err_msg("REP", "No se pudo leer el EBR")
                         return
@@ -225,27 +242,136 @@ class REP:
                     label += '''|{<f0>EBR|'''
                     label += f'''{current_ebr.ebr_name}'''
                     while current_ebr.ebr_next != -1:
-                        data_ebr = bfm(tmp_path).read_binary_data(current_ebr.ebr_next, struct.calcsize(current_ebr.FORMATEBR))
+                        data_ebr = bfm(tmp_path).read_binary_data(
+                            current_ebr.ebr_next, struct.calcsize(current_ebr.FORMATEBR))
                         if data_ebr is None:
                             fn().err_msg("REP", "No se pudo leer el EBR")
                             return
                         current_ebr = EBR()
                         current_ebr.deserialize_ebr(data_ebr)
                         label += f'''|EBR|<f0> {current_ebr.ebr_name}'''
-                    label += ''''}}'''        
+                    label += ''''}}'''
                 else:
-                    label += f'''|<f0> {partition.part_name}'''    
+                    label += f'''|<f0> {partition.part_name}'''
             else:
                 label += f'''|<f0> LIBRE'''
-        
+
         label += f'''|<f0> LIBRE'''
 
         # print(label)
         digraph = Digraph(format='svg', node_attr={"rankdir": "LR"})
         disk = Digraph(name="cluster0", node_attr={"color": "blue"})
-        
+
         disk.node(name="disk", shape="record", label=label)
         digraph.subgraph(disk)
 
-        digraph.render(filename=self.file_name, directory=self.output_path_folder)
-                     
+        digraph.render(filename=self.file_name,
+                       directory=self.output_path_folder)
+
+    def _rep_bm_inode(self):
+        if self._tmp_partition is None:
+            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            return False
+        if self._tmp_partition._tmp_partition.part_type == "E":
+            fn().err_msg("REP", "No se puede ejecutar el reporte bm_inode en una partición lógica")
+            return False
+        binary_data = bfm(self._tmp_partition.get_path()).read_binary_data(
+            self._tmp_partition._tmp_partition.part_start, struct.calcsize(SuperBlock().FORMATSUPERBLOCK))
+        if binary_data is None:
+            fn().err_msg("REP", "No se pudo leer el Super Bloque")
+            return
+        super_block = SuperBlock()
+        super_block.deserialize_super_block(binary_data)
+        print(super_block)
+
+    def _rep_block(self):
+        if self._tmp_partition is None:
+            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            return False
+        if self._tmp_partition._tmp_partition.part_type == "E":
+            fn().err_msg("REP", "No se puede ejecutar el reporte bm_inode en una partición lógica")
+            return False
+        binary_data = bfm(self._tmp_partition.get_path()).read_binary_data(
+            self._tmp_partition._tmp_partition.part_start, struct.calcsize(SuperBlock().FORMATSUPERBLOCK))
+        if binary_data is None:
+            fn().err_msg("REP", "No se pudo leer el Super Bloque")
+            return
+        super_block = SuperBlock()
+        super_block.deserialize_super_block(binary_data)
+        graph = Digraph(format='svg', node_attr={"rankdir": "LR"})
+        graph.node(f'''REPORTE Super Bloque''', label=f'''<<TABLE>
+                    <TR>
+                    <TD BGCOLOR="green" WIDTH="5">REPORTE Super Bloque</TD>
+                    <TD BGCOLOR="green" WIDTH="5">{self._tmp_partition._tmp_partition.part_name}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_filesystem_type</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_filesystem_type}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_inodes_count</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_inodes_count}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_blocks_count</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_blocks_count}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_free_blocks_count</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_free_blocks_count}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_free_inodes_count</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_free_inodes_count}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_mtime</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{fn().get_time_stamp_obj(super_block.s_mtime)}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_umtime</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{fn().get_time_stamp_obj(super_block.s_umtime)}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_mnt_count</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_mnt_count}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_magic</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_magic}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_inode_s</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_inode_size}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_block_s</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_block_size}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_first_ino</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_first_ino}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_first_blo</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_first_blo}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_bm_inode_start</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_bm_inode_start}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_bm_block_start</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_bm_block_start}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_inode_start</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_inode_start}</TD>
+                    </TR>
+                    <TR>
+                    <TD BGCOLOR="yellow" WIDTH="5">s_block_start</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{super_block.s_block_start}</TD>
+                    </TR>
+                    </TABLE>>''', shape="none")
+        graph.render(filename=self.file_name,
+                     directory=self.output_path_folder)
