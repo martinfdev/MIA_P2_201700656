@@ -97,7 +97,7 @@ def t_STRING(t):
     return t
 
 def t_IDENTIFIER(t):
-    r'[a-zA-Z_0-9][a-zA-Z_0-9]*'
+    r'[a-zA-Z_0-9]*[a-zA-Z]+([0-9]+)?'
     t.type = reserve.get(t.value.lower(), 'IDENTIFIER')    # Check for reserved words
     return t
 
