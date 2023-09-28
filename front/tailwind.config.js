@@ -16,7 +16,7 @@ export default {
         'danger': '#FF0000',
         'success': '#008000',
         'info': '#00FFFF',
-        'dark': '#000000',
+        'dark': '#0b2c57',
         'light': '#FFFFFF'
       },
     },
