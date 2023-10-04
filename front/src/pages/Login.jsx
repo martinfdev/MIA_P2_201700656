@@ -1,11 +1,27 @@
+import {AiOutlineEye} from 'react-icons/ai';
 
-function Login(){
-    return(
-        <div>
-            <h1>Login</h1>
-            <input type="label" />
-            <input type="password" />
-            <button>Log in</button>
+function Login() {
+    return (
+        <div className="flex h-screen justify-center items-center">
+            <div className="flex flex-col items-center justify-center gap-14 rounded-md bg-slate-600 w-auto h-auto p-10">
+                <h1 className="text-3xl text-slate-200 font-semibold">Login</h1>
+                <div className="flex flex-col gap-4 w-full">
+                    <input
+                        type="text"
+                        placeholder="ID Particion"
+                        className="p-2 rounded-md bg-slate-200 w-full hover:bg-blue-200 border-2 hover:border-primary hover:shadow-md" />
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        className="p-2 rounded-md bg-slate-200 w-full hover:bg-blue-200 border-2 hover:border-primary hover:shadow-md" />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        className="p-2 rounded-md bg-slate-200 w-full hover:bg-blue-200 border-2 hover:border-primary hover:shadow-md" />
+                    <AiOutlineEye className="text-2xl text-slate-200" />
+                </div>
+                <button className="p-3 rounded-md text-slate-900 font-bold bg-slate-200 border-4 hover:border-primary  w-full">Ingresar</button>
+            </div>
         </div>
     )
 }
