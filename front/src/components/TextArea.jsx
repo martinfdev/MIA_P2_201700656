@@ -2,12 +2,8 @@ import { useState } from "react"
 import { PropTypes } from "prop-types"
 
 function TextArea({ value, onChange, isEditable }) {
-    // eslint-disable-next-line no-unused-vars
-    const [text, setText] = useState("")
-
-    const handleTextChange = (event) => {
+        const handleTextChange = (event) => {
         const newText = event.target.value
-        setText(newText)
         onChange(newText)
     }
     return (
