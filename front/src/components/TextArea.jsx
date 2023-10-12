@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { PropTypes } from "prop-types"
 
 function TextArea({ value, onChange, isEditable }) {
