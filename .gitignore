@@ -11,3 +11,4 @@ parsetab.py
 *.png
 *.jpg
 *.sh
+.vscode/

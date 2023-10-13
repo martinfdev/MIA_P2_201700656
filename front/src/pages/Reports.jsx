@@ -27,7 +27,7 @@ function Reports() {
     //<div className="flex flex-row gap-6 p-6 justify-between items-center"></div>
     return (
         <div className='h-screen'>
-            {chunkArray(dataImages, 6).map((chunk, index) => (
+            {chunkArray(dataImages, 5).map((chunk, index) => (
                 <div key={index} className="flex flex-row gap-12 p-10 justify-between items-center">
                     {chunk.map((image, index) => (
                         <Card key={index} name={image.author} imageUrl={image.download_url
