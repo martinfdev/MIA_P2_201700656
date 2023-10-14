@@ -1,3 +1,4 @@
+.vscode/
 venv
 __pycache__
 *.bin
@@ -11,4 +12,3 @@ parsetab.py
 *.png
 *.jpg
 *.sh
-.vscode/
