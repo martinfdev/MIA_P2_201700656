@@ -4,4 +4,4 @@ flask:
 
 run:
 	@echo "Running ..."
-	python main.py
+	python App.py
