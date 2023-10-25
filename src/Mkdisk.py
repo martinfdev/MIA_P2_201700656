@@ -43,7 +43,7 @@ class Mkdisk:
             self.arr_output_result.append("MKDISK No se especificó el parámetro obligatorio PATH")
             return False
         else:
-            function = fns()
+            function = fns(self.arr_output_result)
             if not function.check_status_folder(self._path):
                 function.create_folder(self._path, "MKDISK")
         if self._size == -1:
@@ -82,21 +82,21 @@ class Mkdisk:
         elif self._fit == "WF": return "W"
 
     def _create_disk(self):
-        function = fns()
+        function = fns(self.arr_output_result)
         self._size = self._set_value_unit()
         if not function.check_status_file(self._path+self._file_name):
-            if not bfm(self._path+self._file_name).create_file():
+            if not bfm(self._path+self._file_name, self.arr_output_result).create_file():
                 # function.err_msg("MKDISK", "No se pudo crear el archivo "+function.CYAN+self._file_name)
                 self.arr_output_result.append("MKDISK No se pudo crear el archivo "+self._file_name)
                 return False
         else:
-            bfm(self._path+self._file_name).create_file() 
+            bfm(self._path+self._file_name, self.arr_output_result).create_file() 
             # function.success_msg("MKDISK", "archivo "+function.CYAN+self._file_name+function.RESET+" reescrito!")
             self.arr_output_result.append("MKDISK archivo "+self._file_name+" reescrito!")
-        return bfm(self._path+self._file_name).fill_binary_file(self._size, 0)
+        return bfm(self._path+self._file_name, self.arr_output_result).fill_binary_file(self._size, 0)
     
     def _write_mbr(self):
-        new_mbr = mbr()
-        new_mbr.setValues(self._size, fns().get_random_mumber(1, 200000), self._get_fit_for_mbr())
-        bfm(self._path+self._file_name).write_binary_data(new_mbr.serialize_mbr(), 0)
+        new_mbr = mbr(self.arr_output_result)
+        new_mbr.setValues(self._size, fns(self.arr_output_result).get_random_mumber(1, 200000), self._get_fit_for_mbr())
+        bfm(self._path+self._file_name, self.arr_output_result).write_binary_data(new_mbr.serialize_mbr(), 0)
         return True

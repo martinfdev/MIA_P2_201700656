@@ -11,7 +11,7 @@ class Mount:
         self._name = ""
         self.id = ""
         self._tmp_partition = None
-        self.tmp_mbr = MBR()
+        self.tmp_mbr = MBR([])
 
     def execute_mount(self):
         if not self._set_val_properties_mount(self._list_params):
@@ -47,12 +47,12 @@ class Mount:
 
     #generate id for mount
     def _generateid(self):
-        tmp_mbr = MBR()
-        if not fn().check_status_file(self._path):
+        tmp_mbr = MBR(self.arr_output_result)
+        if not fn(self.arr_output_result).check_status_file(self._path):
             # fn().err_msg("Mount", "No se encontró el archivo "+self._path)
             self.arr_output_result.append("No se encontró el archivo "+self._path)
             return False
-        tmp_mbr = tmp_mbr.deserialize_mbr(bfm(self._path).read_binary_data(0, struct.calcsize(tmp_mbr.FORMATMBR)+struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION)*4))
+        tmp_mbr = tmp_mbr.deserialize_mbr(bfm(self._path, self.arr_output_result).read_binary_data(0, struct.calcsize(tmp_mbr.FORMATMBR)+struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION)*4))
         if tmp_mbr is None:
             return False
         num_partitions = 0
@@ -76,10 +76,10 @@ class Mount:
         return True
     
     def _find_logic_partition(self, partition):
-        tmp_ebr = EBR()
+        tmp_ebr = EBR(self.arr_output_result)
         num_partitions = 3
         if partition.part_type == "E":
-            tmp_ebr = tmp_ebr.deserialize_ebr(bfm(self._path).read_binary_data(partition.part_start, struct.calcsize(tmp_ebr.FORMATEBR)))
+            tmp_ebr = tmp_ebr.deserialize_ebr(bfm(self._path, self.arr_output_result).read_binary_data(partition.part_start, struct.calcsize(tmp_ebr.FORMATEBR)))
             if tmp_ebr is None:
                 return False
             num_partitions += 1
@@ -90,7 +90,7 @@ class Mount:
             
             while tmp_ebr.ebr_next != -1:
                 num_partitions += 1
-                tmp_ebr = tmp_ebr.deserialize_ebr(bfm(self._path).read_binary_data(tmp_ebr.ebr_next, struct.calcsize(tmp_ebr.FORMATEBR)))
+                tmp_ebr = tmp_ebr.deserialize_ebr(bfm(self._path, self.arr_output_result).read_binary_data(tmp_ebr.ebr_next, struct.calcsize(tmp_ebr.FORMATEBR)))
                 if tmp_ebr is None:
                     return False
                 if tmp_ebr.ebr_name == self._name:

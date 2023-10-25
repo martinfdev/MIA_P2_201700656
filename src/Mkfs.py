@@ -113,7 +113,7 @@ class Mkfs:
         block = Content()
         bitmap = Bitmap()
         value_of_n = 0
-        fns = fn()
+        fns = fn(self.arr_output_result)
         pos_init_value = {}
         if isinstance(self._tmp_partition, Partition):
             if self._fs == "2FS":
@@ -137,9 +137,9 @@ class Mkfs:
                 value_of_n = fns.calculte_n_with_journaling(self._tmp_partition.ebr_size, Journaling(), new_super_block , inode, block)
             bitmap.size_bitmap = value_of_n
             if self._fs == "2FS":
-                pos_init_value = self._first_pos(value_of_n, self._tmp_partition.ebr_start, struct.calcsize(EBR().FORMATEBR))
+                pos_init_value = self._first_pos(value_of_n, self._tmp_partition.ebr_start, struct.calcsize(EBR(self.arr_output_result).FORMATEBR))
             if self._fs == "3FS":
-                pos_init_value = self._first_pos_with_journaling(value_of_n, self._tmp_partition.ebr_start, struct.calcsize(EBR().FORMATEBR))
+                pos_init_value = self._first_pos_with_journaling(value_of_n, self._tmp_partition.ebr_start, struct.calcsize(EBR(self.arr_output_result).FORMATEBR))
             if pos_init_value is None:
                 return False
            # print("logical partition", value_of_n)
@@ -150,7 +150,7 @@ class Mkfs:
         
         new_super_block.set_values_super_block(type_fs, value_of_n, 3*value_of_n, 3*value_of_n, value_of_n, fns.get_time_stamp(fns.get_time_stamp_now()), fns.get_time_stamp(fns.get_time_stamp_now()), 1, 0xEF53, struct.calcsize(inode.FORMARTINODETABLE), struct.calcsize(block.FORMARTCONTENT)*4, pos_init_value["inode"], pos_init_value["block"], pos_init_value["bitmap_inode"], pos_init_value["bitmap_block"], pos_init_value["inode"], pos_init_value["block"])
 
-        bf = bfm(self._tmp_path)
+        bf = bfm(self._tmp_path, self.arr_output_result)
 
         if self._fs == "3FS":
             journaling = Journaling()

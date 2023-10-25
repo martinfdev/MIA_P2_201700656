@@ -25,9 +25,9 @@ def execute():
             output = cli_command(content)
             return jsonify({"output": output})
         else:
-            return jsonify({"output": "No se ha ingresado un comando"})
+            return jsonify({"output": ["No se ha ingresado un comando"]})
     else:
-        return jsonify({"output": "No se ha ingresado un comando"})
+        return jsonify({"output": ["No se ha ingresado un comando"]})
 
 @app.route('/reports', methods=['GET'])
 def getreports():

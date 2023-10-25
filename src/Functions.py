@@ -4,7 +4,8 @@ import datetime
 import struct
 import os
 class Functions:
-    def __init__(self):
+    def __init__(self, arr_output_result) -> None:
+        self.arr_output_result = arr_output_result
         self.RESET = '\033[0m'
         self.RED = '\033[91m'
         self.GREEN = '\033[92m'
@@ -38,10 +39,12 @@ class Functions:
         return bytes.decode().rstrip('\x00')
 
     def err_msg(self, command, message):
-        print(f"{self.RED}ERROR {command}: {self.YELLOW}{message} {self.RESET}")
+        # print(f"{self.RED}ERROR {command}: {self.YELLOW}{message} {self.RESET}")
+        self.arr_output_result.append(f"ERROR {command}: {message}")
 
     def success_msg(self, command, message):
-        print(f"{self.GREEN}SUCCESS {command}: {self.BLUE}{message} {self.RESET}")
+        # print(f"{self.GREEN}SUCCESS {command}: {self.BLUE}{message} {self.RESET}")
+        self.arr_output_result.append(f"SUCCESS {command}: {message}")
 
     def serialize(self,format, *args):
             return struct.pack(format, *args)
@@ -50,7 +53,8 @@ class Functions:
         try:
             return struct.unpack(format, data)
         except struct.error:
-            print(f"{self.RED}Error  {self.RESET}al deserializar", struct.error)
+            # print(f"{self.RED}Error  {self.RESET}al deserializar", struct.error)
+            self.arr_output_result.append(f"Error al deserializar {struct.error}")
             return None
 
     def check_status_file(self, file_path):
@@ -60,7 +64,8 @@ class Functions:
             open(file_path, 'rb')
             return True
         except IOError:
-            print(f'{self.RED}Error {self.YELLOW} archivo {self.BLUE}{file_path}{self.YELLOW} no existe!{self.RESET}')
+            # print(f'{self.RED}Error {self.YELLOW} archivo {self.BLUE}{file_path}{self.YELLOW} no existe!{self.RESET}')
+            self.arr_output_result.append(f'Error archivo {file_path} no existe!')
             return False
     
     def check_status_folder(self, folder_path):
@@ -74,11 +79,13 @@ class Functions:
     def create_folder(self, folder_path, command = ""):
         try:
             os.makedirs(folder_path)
-            print(f'{self.GREEN}SUCCESS {command}: {self.YELLOW} al crear carpeta {self.BLUE}{folder_path}{self.RESET}')
+            # print(f'{self.GREEN}SUCCESS {command}: {self.YELLOW} al crear carpeta {self.BLUE}{folder_path}{self.RESET}')
+            self.arr_output_result.append(f'SUCCESS {command}: al crear carpeta {folder_path}')
             return True
         except OSError:
             print(OSError.args)
-            print(f'{self.RED}WARNING {self.YELLOW} ya existe directorio {self.BLUE}{folder_path}{self.RESET}')
+            # print(f'{self.RED}WARNING {self.YELLOW} ya existe directorio {self.BLUE}{folder_path}{self.RESET}')
+            self.arr_output_result.append(f'WARNING {command}: ya existe directorio {folder_path}')
             return False
 
     def calculate_value_of_n(self, size_partition, super_block, inode, content):

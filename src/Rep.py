@@ -8,7 +8,8 @@ from src.Blocks import *
 import math
 
 class REP:
-    def __init__(self, list_params) -> None:
+    def __init__(self, list_params, arr_output_result) -> None:
+        self.arr_output_result = arr_output_result
         self.params = list_params
         self.name = ""
         self.output_path = ""
@@ -22,7 +23,8 @@ class REP:
         if not self._set_params():
             return
         if not self._find_partition(list_mounts):
-            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            # fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            self.arr_output_result.append("REP: No se encontró la partición con el ID especificado")
             return
         self._create_directory()
 
@@ -57,28 +59,33 @@ class REP:
                 self.path_file_ls = param['ruta'].get_value()
 
         if self.id == "":
-            fn().err_msg("REP", "No se especificó el parámetro obligatorio ID")
+            # fn().err_msg("REP", "No se especificó el parámetro obligatorio ID")
+            self.arr_output_result.append("REP: No se especificó el parámetro obligatorio ID")
             return False
         if self.name == "":
-            fn().err_msg("REP", "No se especificó el parámetro obligatorio NAME")
+            # fn().err_msg("REP", "No se especificó el parámetro obligatorio NAME")
+            self.arr_output_result.append("REP: No se especificó el parámetro obligatorio NAME")
             return False
         if self.output_path == "":
-            fn().err_msg("REP", "No se especificó el parámetro obligatorio PATH")
+            # fn().err_msg("REP", "No se especificó el parámetro obligatorio PATH")
+            self.arr_output_result.append("REP: No se especificó el parámetro obligatorio PATH")
             return False
         return True
 
     def _mbr(self):
         if self._tmp_partition is None:
-            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            # fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            self.arr_output_result.append("REP: No se encontró la partición con el ID especificado")
             return False
         tmp_path = self._tmp_partition.get_path()
-        tmp_mbr = MBR()
+        tmp_mbr = MBR(self.arr_output_result)
         total_bytes_to_read = struct.calcsize(
             tmp_mbr.FORMATMBR) + struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
-        binary_data_mbr = bfm(tmp_path).read_binary_data(
+        binary_data_mbr = bfm(tmp_path, self.arr_output_result).read_binary_data(
             0, total_bytes_to_read)
         if binary_data_mbr is None:
-            fn().err_msg("REP", "No se pudo leer el MBR")
+            # fn().err_msg("REP", "No se pudo leer el MBR")
+            self.arr_output_result.append("REP: No se pudo leer el MBR")
             return
         tmp_mbr.deserialize_mbr(binary_data_mbr)
         list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2,
@@ -139,23 +146,25 @@ class REP:
                 tmp_extended_partition = partition
                 break
         list_ebr = []
-        tmp_ebr = EBR()
+        tmp_ebr = EBR(self.arr_output_result)
         if existExtendedPartition and tmp_extended_partition is not None:
-            data_ebr = bfm(tmp_path).read_binary_data(
+            data_ebr = bfm(tmp_path, self.arr_output_result).read_binary_data(
                 tmp_extended_partition.part_start, struct.calcsize(tmp_ebr.FORMATEBR))
             if data_ebr is None:
-                fn().err_msg("REP", "No se pudo leer el EBR")
+                # fn().err_msg("REP", "No se pudo leer el EBR")
+                self.arr_output_result.append("REP: No se pudo leer el EBR")
                 return
             tmp_ebr.deserialize_ebr(data_ebr)
             list_ebr.append(tmp_ebr)
 
             while tmp_ebr.ebr_next != -1:
-                data_ebr = bfm(tmp_path).read_binary_data(
+                data_ebr = bfm(tmp_path, self.arr_output_result).read_binary_data(
                     tmp_ebr.ebr_next, struct.calcsize(tmp_ebr.FORMATEBR))
                 if data_ebr is None:
-                    fn().err_msg("REP", "No se pudo leer el EBR")
+                    # fn().err_msg("REP", "No se pudo leer el EBR")
+                    self.arr_output_result.append("REP: No se pudo leer el EBR")
                     return
-                tmp_ebr = EBR()
+                tmp_ebr = EBR(self.arr_output_result)
                 tmp_ebr.deserialize_ebr(data_ebr)
                 list_ebr.append(tmp_ebr)
         for ebr in list_ebr:
@@ -193,8 +202,8 @@ class REP:
                        directory=self.output_path_folder)
 
     def _create_directory(self):
-        if not fn().check_status_folder(self.output_path_folder):
-            return fn().create_folder(self.output_path_folder)
+        if not fn(self.arr_output_result).check_status_folder(self.output_path_folder):
+            return fn(self.arr_output_result).create_folder(self.output_path_folder)
         return False
 
     def _find_partition(self, listMounts):
@@ -206,16 +215,18 @@ class REP:
 
     def _disk(self):
         if self._tmp_partition is None:
-            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            # fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            self.arr_output_result.append("REP: No se encontró la partición con el ID especificado")
             return False
         tmp_path = self._tmp_partition.get_path()
-        tmp_mbr = MBR()
+        tmp_mbr = MBR(self.arr_output_result)
         total_bytes_to_read = struct.calcsize(
             tmp_mbr.FORMATMBR) + struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
-        binary_data_mbr = bfm(tmp_path).read_binary_data(
+        binary_data_mbr = bfm(tmp_path, self.arr_output_result).read_binary_data(
             0, total_bytes_to_read)
         if binary_data_mbr is None:
-            fn().err_msg("REP", "No se pudo leer el MBR")
+            # fn().err_msg("REP", "No se pudo leer el MBR")
+            self.arr_output_result.append("REP: No se pudo leer el MBR")
             return
         tmp_mbr.deserialize_mbr(binary_data_mbr)
         list_partitions = [tmp_mbr.mbr_partition_1, tmp_mbr.mbr_partition_2,
@@ -232,22 +243,24 @@ class REP:
             if partition.part_status != "\0":
                 if partition.part_type == "E":
                     label += '''|{<f0> EXTENDIDA'''
-                    current_ebr = EBR()
-                    data_ebr = bfm(tmp_path).read_binary_data(
+                    current_ebr = EBR(self.arr_output_result)
+                    data_ebr = bfm(tmp_path, self.arr_output_result).read_binary_data(
                         partition.part_start, struct.calcsize(current_ebr.FORMATEBR))
                     if data_ebr is None:
-                        fn().err_msg("REP", "No se pudo leer el EBR")
+                        # fn().err_msg("REP", "No se pudo leer el EBR")
+                        self.arr_output_result.append("REP: No se pudo leer el EBR")
                         return
                     current_ebr.deserialize_ebr(data_ebr)
                     label += '''|{<f0>EBR|'''
                     label += f'''{current_ebr.ebr_name}'''
                     while current_ebr.ebr_next != -1:
-                        data_ebr = bfm(tmp_path).read_binary_data(
+                        data_ebr = bfm(tmp_path, self.arr_output_result).read_binary_data(
                             current_ebr.ebr_next, struct.calcsize(current_ebr.FORMATEBR))
                         if data_ebr is None:
-                            fn().err_msg("REP", "No se pudo leer el EBR")
+                            # fn().err_msg("REP", "No se pudo leer el EBR")
+                            self.arr_output_result.append("REP: No se pudo leer el EBR")
                             return
-                        current_ebr = EBR()
+                        current_ebr = EBR(self.arr_output_result)
                         current_ebr.deserialize_ebr(data_ebr)
                         label += f'''|EBR|<f0> {current_ebr.ebr_name}'''
                     label += ''''}}'''
@@ -270,19 +283,22 @@ class REP:
 
     def _rep_bm_inode(self):
         if self._tmp_partition is None:
-            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            # fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            self.arr_output_result.append("REP: No se encontró la partición con el ID especificado")
             return False
         if self._tmp_partition._tmp_partition.part_type == "E":
-            fn().err_msg("REP", "No se puede ejecutar el reporte bm_inode en una partición lógica")
+            # fn().err_msg("REP", "No se puede ejecutar el reporte bm_inode en una partición lógica")
+            self.arr_output_result.append("REP: No se puede ejecutar el reporte bm_inode en una partición lógica")
             return False
-        binary_data = bfm(self._tmp_partition.get_path()).read_binary_data(
+        binary_data = bfm(self._tmp_partition.get_path(), self.arr_output_result).read_binary_data(
             self._tmp_partition._tmp_partition.part_start, struct.calcsize(SuperBlock().FORMATSUPERBLOCK))
         if binary_data is None:
-            fn().err_msg("REP", "No se pudo leer el Super Bloque")
+            # fn().err_msg("REP", "No se pudo leer el Super Bloque")
+            self.arr_output_result.append("REP: No se pudo leer el Super Bloque")
             return
         super_block = SuperBlock()
         super_block.deserialize_super_block(binary_data)
-        binary_data_bm_inode = bfm(self._tmp_partition.get_path()).read_binary_data(
+        binary_data_bm_inode = bfm(self._tmp_partition.get_path(), self.arr_output_result).read_binary_data(
             super_block.s_bm_inode_start, super_block.s_inodes_count)
         bm_inode = Bitmap()
         bm_inode.deserialize_bitmap(binary_data_bm_inode, super_block.s_inodes_count)
@@ -310,15 +326,18 @@ class REP:
 
     def _rep_block(self):
         if self._tmp_partition is None:
-            fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            # fn().err_msg("REP", "No se encontró la partición con el ID especificado")
+            self.arr_output_result.append("REP: No se encontró la partición con el ID especificado")
             return False
         if self._tmp_partition._tmp_partition.part_type == "E":
-            fn().err_msg("REP", "No se puede ejecutar el reporte bm_inode en una partición lógica")
+            # fn().err_msg("REP", "No se puede ejecutar el reporte bm_inode en una partición lógica")
+            self.arr_output_result.append("REP: No se puede ejecutar el reporte bm_inode en una partición lógica")
             return False
-        binary_data = bfm(self._tmp_partition.get_path()).read_binary_data(
+        binary_data = bfm(self._tmp_partition.get_path(), self.arr_output_result).read_binary_data(
             self._tmp_partition._tmp_partition.part_start, struct.calcsize(SuperBlock().FORMATSUPERBLOCK))
         if binary_data is None:
-            fn().err_msg("REP", "No se pudo leer el Super Bloque")
+            # fn().err_msg("REP", "No se pudo leer el Super Bloque")
+            self.arr_output_result.append("REP: No se pudo leer el Super Bloque")
             return
         super_block = SuperBlock()
         super_block.deserialize_super_block(binary_data)
@@ -350,11 +369,11 @@ class REP:
                     </TR>
                     <TR>
                     <TD BGCOLOR="yellow" WIDTH="5">s_mtime</TD>
-                    <TD BGCOLOR="yellow" WIDTH="5">{fn().get_time_stamp_obj(super_block.s_mtime)}</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{fn(self.arr_output_result).get_time_stamp_obj(super_block.s_mtime)}</TD>
                     </TR>
                     <TR>
                     <TD BGCOLOR="yellow" WIDTH="5">s_umtime</TD>
-                    <TD BGCOLOR="yellow" WIDTH="5">{fn().get_time_stamp_obj(super_block.s_umtime)}</TD>
+                    <TD BGCOLOR="yellow" WIDTH="5">{fn(self.arr_output_result).get_time_stamp_obj(super_block.s_umtime)}</TD>
                     </TR>
                     <TR>
                     <TD BGCOLOR="yellow" WIDTH="5">s_mnt_count</TD>

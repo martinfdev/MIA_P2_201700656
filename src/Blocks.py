@@ -41,11 +41,11 @@ class SuperBlock:
         self.s_block_start = s_block_start
 
     def serialize_super_block(self):
-        fns = fn()
+        fns = fn([])
         return fns.serialize(self.FORMATSUPERBLOCK, self.s_filesystem_type, self.s_inodes_count, self.s_blocks_count, self.s_free_blocks_count, self.s_free_inodes_count, self.s_mtime, self.s_umtime, self.s_mnt_count, self.s_magic, self.s_inode_size, self.s_block_size, self.s_first_ino, self.s_first_blo, self.s_bm_inode_start, self.s_bm_block_start, self.s_inode_start, self.s_block_start)
 
     def deserialize_super_block(self, data):
-        data =  fn().deserialize(self.FORMATSUPERBLOCK, data)
+        data =  fn([]).deserialize(self.FORMATSUPERBLOCK, data)
         if data is None:
             print("Error al deserializar super bloque")
             return None
@@ -96,11 +96,11 @@ class Inode:
         self.i_perm = i_perm
 
     def serialize_inode(self):
-        fns = fn()
-        return fns.serialize(self.FORMARTINODETABLE, self.i_uid, self.i_gid, self.i_size, self.i_atime, self.i_ctime, self.i_mtime, *self.i_block, fn().string_to_bytes(self.i_type), self.i_perm)
+        fns = fn([])
+        return fns.serialize(self.FORMARTINODETABLE, self.i_uid, self.i_gid, self.i_size, self.i_atime, self.i_ctime, self.i_mtime, *self.i_block, fn([]).string_to_bytes(self.i_type), self.i_perm)
     
     def deserialize_inode(self, data):
-        data = fn().deserialize(self.FORMARTINODETABLE, data)
+        data = fn([]).deserialize(self.FORMARTINODETABLE, data)
         if data is None:
             print("Error al deserializar inodo")
             return None
@@ -111,7 +111,7 @@ class Inode:
         self.i_ctime = data[4]
         self.i_mtime = data[5]
         self.i_block = data[6:21]
-        self.i_type = fn().bytes_to_string(data[22])
+        self.i_type = fn([]).bytes_to_string(data[22])
         self.i_perm = data[23]
         return self
 
@@ -141,15 +141,15 @@ class Content:
         self.b_inodo = -1
 
     def serialize_content(self):
-        fns = fn()
+        fns = fn([])
         return fns.serialize(self.FORMARTCONTENT, fns.string_to_bytes(self.b_name), self.b_inodo)
 
     def deserialize_content(self, data):
-        data = fn().deserialize(self.FORMARTCONTENT, data)
+        data = fn([]).deserialize(self.FORMARTCONTENT, data)
         if data is None:
             print("Error al deserializar Contenido")
             return None
-        self.b_name = fn().bytes_to_string(data[0])
+        self.b_name = fn([]).bytes_to_string(data[0])
         self.b_inodo = data[1]
         return self   
 
@@ -158,15 +158,15 @@ class BlockFile:
         self.FORMATBLOCKFILE = "64s"
 
     def serialize_block_file(self, data):
-        fns = fn()
+        fns = fn([])
         return fns.serialize(self.FORMATBLOCKFILE, fns.string_to_bytes(data))
 
     def deserialize_block_file(self, data):
-        data = fn().deserialize(self.FORMATBLOCKFILE, data)
+        data = fn([]).deserialize(self.FORMATBLOCKFILE, data)
         if data is None:
             print("Error al deserializar bloque de archivo")
             return None
-        return fn().bytes_to_string(data[0])    
+        return fn([]).bytes_to_string(data[0])    
 
 class BlockPointer:
     def __init__(self)->None:
@@ -174,11 +174,11 @@ class BlockPointer:
         self.block_pointer = [-1]*16 #15 pointers
 
     def serialize_block_pointer(self):
-        fns = fn()
+        fns = fn([])
         return fns.serialize(self.FORMATBLOCKPOINTER, *self.block_pointer)
 
     def deserialize_block_pointer(self, data):
-        data = fn().deserialize(self.FORMATBLOCKPOINTER, data)
+        data = fn([]).deserialize(self.FORMATBLOCKPOINTER, data)
         if data is None:
             print("Error al deserializar bloque de punteros")
             return None
@@ -194,17 +194,17 @@ class Journaling:
         self.date = 0                
 
     def serialize_journaling(self):
-        fns = fn()
+        fns = fn([])
         return fns.serialize(self.FORMATJOURNALING, fns.string_to_bytes(self.operation), fns.string_to_bytes(self.path), fns.string_to_bytes(self.cotent), self.date)
     
     def deserialize_journaling(self, data):
-        data = fn().deserialize(self.FORMATJOURNALING, data)
+        data = fn([]).deserialize(self.FORMATJOURNALING, data)
         if data is None:
             print("Error al deserializar journaling")
             return None
-        self.operation = fn().bytes_to_string(data[0])
-        self.path = fn().bytes_to_string(data[1])
-        self.cotent = fn().bytes_to_string(data[2])
+        self.operation = fn([]).bytes_to_string(data[0])
+        self.path = fn([]).bytes_to_string(data[1])
+        self.cotent = fn([]).bytes_to_string(data[2])
         self.date = data[3]
         return self
 
@@ -221,9 +221,9 @@ class Bitmap:
             self.array_bitmap = [b'0'] * self.size_bitmap
         else:
             self.size_bitmap = len(array_bitmap)
-            self.array_bitmap = [fn().string_to_bytes(item) for item in array_bitmap]
+            self.array_bitmap = [fn([]).string_to_bytes(item) for item in array_bitmap]
             self._FORMATBITMAPINODE = str(len(self.array_bitmap)) + self._FORMATBITMAPINODE    
-        fns = fn()
+        fns = fn([])
         return fns.serialize(self._FORMATBITMAPINODE, *self.array_bitmap)
 
     def deserialize_bitmap(self, data, size_bitmap):
@@ -232,9 +232,9 @@ class Bitmap:
             return None
         self.size_bitmap = size_bitmap
         self._FORMATBITMAPINODE = str(self.size_bitmap) + self._FORMATBITMAPINODE
-        data = fn().deserialize(self._FORMATBITMAPINODE, data)
+        data = fn([]).deserialize(self._FORMATBITMAPINODE, data)
         if data is None:
             print("Error al deserializar bitmap de inodos")
             return None
-        self.array_bitmap = [fn().bytes_to_string(item) for item in data]
+        self.array_bitmap = [fn([]).bytes_to_string(item) for item in data]
         return self

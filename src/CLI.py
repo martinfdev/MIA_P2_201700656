@@ -301,7 +301,7 @@ def p_param_mkdir(t):
 
 def p_rep_instruction(t):
     '''rep_instruction :    REP ls_params_rep'''
-    REP(t[2]).execute_rep(list_mount_partition)
+    REP(t[2], output_result).execute_rep(list_mount_partition)
     t[0] = ""
 
 def p_ls_params_rep(t):
@@ -323,7 +323,7 @@ def p_param_rep(t):
 
 def p_login_instruction(t):
     '''login_instruction :   LOGIN ls_params_login'''
-    Login(t[2]).execute_login(list_mount_partition)
+    Login(t[2], output_result).execute_login(list_mount_partition)
     t[0] = ""
 
 def p_ls_params_login(t):
@@ -424,7 +424,7 @@ def p_pwd_eq_id(t):
     t[0] = Pwd(t[3])            
 def p_error(t):
     if t:
-        print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {} linea: {} columna: {}".format(
+        print(Functions([]).RED+"Error "+Functions([]).RESET+"sintactico de tipo {} en el valor {} linea: {} columna: {}".format(
             str(t.type), str(t.value), str(t.lineno), str(find_column(input, t))))
         output_result.append(f"Error sintactico de tipo {str(t.type)} en el valor {str(t.value)} linea: {str(t.lineno)} columna: {str(find_column(input, t))}")
     else:

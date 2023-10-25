@@ -9,7 +9,7 @@ class Rmdisk:
         self._obj_path = obj_path
 
     def execute_rmdisk(self):
-        fn = fns()
+        fn = fns(self.arr_output_result)
         if isinstance(self._obj_path, Path):
             self._folders_dir = self._obj_path.path
             self._file_name = self._obj_path.filename
