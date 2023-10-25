@@ -6,7 +6,7 @@ function Reports() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch('https://picsum.photos/v2/list?page=2&limit=100')
+                const response = await fetch('http://localhost:5000/reports')
                 const data = await response.json()
                 setDataImages(data)
             } catch (error) {
@@ -30,7 +30,7 @@ function Reports() {
             {chunkArray(dataImages, 5).map((chunk, index) => (
                 <div key={index} className="flex flex-row gap-12 p-10 justify-between items-center">
                     {chunk.map((image, index) => (
-                        <Card key={index} name={image.author} imageUrl={image.download_url
+                        <Card key={index} name={image.name} imageUrl={image.url
                         } />
                     ))}
                 </div>
