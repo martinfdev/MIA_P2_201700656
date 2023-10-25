@@ -1,3 +1,4 @@
+from os import name
 from flask import Flask, request, jsonify, url_for
 from flask_cors import CORS
 from src.CLI import cli_command
@@ -8,31 +9,45 @@ from src.UtilClass import *
 import datetime
 import struct
 from src.Blocks import *
+from src.CLI import cli_command
+
 
 app = Flask(__name__)
 
 CORS(app)
 
-@app.route('/', methods=['GET'])
-def index():
-    return {"Nombre": "Pedro Martin Franciso",
-            "Carnet": "201700656"}
+@app.route('/execute', methods=['POST'])
+def execute():
+    if request.method == 'POST':
+        data = request.get_json()
+        content = data.get('content')
+        if content != "":
+            output = cli_command(content)
+            return jsonify({"output": output})
+        else:
+            return jsonify({"output": "No se ha ingresado un comando"})
+    else:
+        return jsonify({"output": "No se ha ingresado un comando"})
 
-@app.route('/getPics', methods=['GET'])
-def getPics():
+@app.route('/reports', methods=['GET'])
+def getreports():
     image_folder = 'static/images'
     image_urls = []
     import os
-    for filename in os.listdir(image_folder):
+    list_images = os.listdir(image_folder)
+    # filter images for type
+    list_images = [img for img in list_images if img.endswith(".svg")]
+
+    for filename in list_images:
+        name = filename.split(".")[0]
         image_url = url_for('static', filename='images/'+filename, _external=True)
-        image_urls.append(image_url)
+        image_urls.append({"url": image_url, "name": name})
     return jsonify(image_urls)
 
 if __name__ == "__main__":
-    app.run(debug=True)
-#     # output = cli_command("execute -path=/home/pedro/Documents/Cursos/Archivos/lab/p1/src.adsj")
-#     # print(output)
-#     # cli_command(output)
+   app.run(debug=True)
+    # output = cli_command("execute -path=/home/pedro/Documents/Cursos/Archivos/lab/p1/src.adsj")
+    # cli_command(output)
 #     while True:
 #         command = input(">> ")
 #         if command == "exit":
