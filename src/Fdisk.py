@@ -3,7 +3,8 @@ from src.UtilClass import *
 from src.Functions import Functions as fns
 from src.BinaryFileManager import BinaryFileManager as bfm
 class Fdisk:
-    def __init__(self, list_params) -> None:
+    def __init__(self, list_params, arr_output_result) -> None:
+        self.arr_output_result = arr_output_result
         self._list_params = list_params
         self._size = None
         self._folders_dir = ""
@@ -22,13 +23,16 @@ class Fdisk:
     def executefdisk(self):
         fn = fns()
         if not self._set_params():
-            fn.err_msg("FDISK", "No se pudo agregar la partición")
+            # fn.err_msg("FDISK", "No se pudo agregar la partición")
+            self.arr_output_result.append("FDISK: No se pudo agregar la partición")
             return
 
         self._tmp_mbr = self._read_mbr_in_file()
         if self._tmp_mbr is None:
-            fn.err_msg("FDISK", "No se pudo leer el MBR")
-            fn.err_msg("FDISK", "No se pudo agregar la partición")
+            # fn.err_msg("FDISK", "No se pudo leer el MBR")
+            self.arr_output_result.append("FDISK: No se pudo leer el MBR")
+            # fn.err_msg("FDISK", "No se pudo agregar la partición")
+            self.arr_output_result.append("FDISK: No se pudo agregar la partición")
             return
         list_partition=[self._tmp_mbr.mbr_partition_1, self._tmp_mbr.mbr_partition_2, self._tmp_mbr.mbr_partition_3, self._tmp_mbr.mbr_partition_4]
         self._mbr_size = self._tmp_mbr.mbr_tamano
@@ -36,7 +40,8 @@ class Fdisk:
      
         #check data name is not None
         if self._check_name_is_none():
-            fn.err_msg("FDISK", "No se pudo agregar la partición")
+            # fn.err_msg("FDISK", "No se pudo agregar la partición")
+            self.arr_output_result.append("FDISK: No se pudo agregar la partición")
             return
 
         #delete partition with name
@@ -73,28 +78,34 @@ class Fdisk:
         #check if exist entended partition for logical partition
         if self._type == 'L':
             if not self._check_exist_extented_partition(self._tmp_mbr):
-                fn.err_msg("FDISK", "No existe una partición extendida para particion logica en "+fn.RED+self._path)
+                # fn.err_msg("FDISK", "No existe una partición extendida para particion logica en "+fn.RED+self._path)
+                self.arr_output_result.append("FDISK: No existe una partición extendida para particion logica en "+self._path)
                 return
             if not self._add_logic_partition(list_partition):
-                fn.err_msg("FDISK", "No se pudo agregar la partición logica "+fn.RED+str(self._name))
+                # fn.err_msg("FDISK", "No se pudo agregar la partición logica "+fn.RED+str(self._name))
+                self.arr_output_result.append("FDISK: No se pudo agregar la partición logica "+str(self._name))
                 return
             else:
-                fn.success_msg("FDISK", "Se agregó la partición logica "+fn.RED+str(self._name))
+                # fn.success_msg("FDISK", "Se agregó la partición logica "+fn.RED+str(self._name))
+                self.arr_output_result.append("FDISK: Se agregó la partición logica "+str(self._name))
                 return
             
         #check if name partition exist
         if self._check_exist_partition(self._tmp_mbr, self._name):
-            fn.err_msg("FDISK", "Ya existe una partición con el nombre "+fn.RED+str(self._name))
+            # fn.err_msg("FDISK", "Ya existe una partición con el nombre "+fn.RED+str(self._name))
+            self.arr_output_result.append("FDISK: Ya existe una partición con el nombre "+str(self._name))
             return
         
         #check free space in disk
         if self._get_free_space_disk(list_partition) < self._get_value_unit_partition():
-            fn.err_msg("FDISK", "No hay espacio disponible en el disco "+fn.RED+self._path)
+            # fn.err_msg("FDISK", "No hay espacio disponible en el disco "+fn.RED+self._path)
+            self.arr_output_result.append("FDISK: No hay espacio disponible en el disco "+self._path)
             return
 
         #check if exist extended partition
         if self._type == 'E' and self._check_exist_extented_partition(self._tmp_mbr):
-            fn.err_msg("FDISK", "Ya existe una partición extendida en el disco "+fn.RED+self._path)
+            # fn.err_msg("FDISK", "Ya existe una partición extendida en el disco "+fn.RED+self._path)
+            self.arr_output_result.append("FDISK: Ya existe una partición extendida en el disco "+self._path)
             return
         elif self._type == 'E' and not self._check_exist_extented_partition(self._tmp_mbr):
             newEBR = EBR()
@@ -110,19 +121,22 @@ class Fdisk:
         if self._mbr_fit == 'F':
             value = self._set_partitition_with_first_fit(list_partition, newpart)
             if value:
-                fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
+                # fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
+                self.arr_output_result.append("FDISK: No se pudo agregar la partición maximo 4 particiones "+str(self._name))
                 return
 
         if self._mbr_fit == 'B':
             value = self._set_partitition_with_best_fit(list_partition, newpart)
             if value:
-                fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
+                # fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
+                self.arr_output_result.append("FDISK: No se pudo agregar la partición maximo 4 particiones "+str(self._name))
                 return
             
         if self._mbr_fit == 'W':
             value = self._set_partitition_with_worst_fit(list_partition, newpart)
             if value:
-                fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
+                # fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
+                self.arr_output_result.append("FDISK: No se pudo agregar la partición maximo 4 particiones "+str(self._name))
                 return
 
         self._tmp_mbr.mbr_partition_1 = list_partition[0]
@@ -131,7 +145,8 @@ class Fdisk:
         self._tmp_mbr.mbr_partition_4 = list_partition[3]
 
         bfm(self._path).write_binary_data(self._tmp_mbr.serialize_mbr(), 0)
-        fn.success_msg("FDISK", "Se agregó la partición "+fn.RED+str(self._name))
+        # fn.success_msg("FDISK", "Se agregó la partición "+fn.RED+str(self._name))
+        self.arr_output_result.append("FDISK: Se agregó la partición "+str(self._name))
 
     #error = False; success = True 
     def _set_params(self):
@@ -159,30 +174,37 @@ class Fdisk:
                 self._add = param.get_value()
                 param_add_delete_found = True
             if self._type != "P" and self._type != "E" and self._type != "L":
-                fn.err_msg("FDISK", "El valor del parámetro TYPE no es válido solo se acepta P, E o L")
+                # fn.err_msg("FDISK", "El valor del parámetro TYPE no es válido solo se acepta P, E o L")
+                self.arr_output_result.append("FDISK: El valor del parámetro TYPE no es válido solo se acepta P, E o L")
                 return False
             if self._fit != "BF" and self._fit != "FF" and self._fit != "WF":
-                fn.err_msg("FDISK", "El valor del parámetro FIT no es válido solo se acepta BF, FF o WF")
+                # fn.err_msg("FDISK", "El valor del parámetro FIT no es válido solo se acepta BF, FF o WF")
+                self.arr_output_result.append("FDISK: El valor del parámetro FIT no es válido solo se acepta BF, FF o WF")
                 return False
             if self._unit != "K" and self._unit != "M" and self._unit != "B":
-                fn.err_msg("FDISK", "El valor del parámetro UNIT no es válido solo se acepta K, M o B")
+                # fn.err_msg("FDISK", "El valor del parámetro UNIT no es válido solo se acepta K, M o B")
+                self.arr_output_result.append("FDISK: El valor del parámetro UNIT no es válido solo se acepta K, M o B")
             if self._add is not None:
                 if self._add < 1:
-                    fn.err_msg("FDISK", "El valor del parámetro ADD debe ser mayor a 0")
+                    # fn.err_msg("FDISK", "El valor del parámetro ADD debe ser mayor a 0")
+                    self.arr_output_result.append("FDISK: El valor del parámetro ADD debe ser mayor a 0")
                     return False    
             if self._delete is not None:
                 if self._delete != "FULL":
-                    fn.err_msg("FDISK", "El valor del parámetro DELETE no es válido solo se acepta FULL")
+                    # fn.err_msg("FDISK", "El valor del parámetro DELETE no es válido solo se acepta FULL")
+                    self.arr_output_result.append("FDISK: El valor del parámetro DELETE no es válido solo se acepta FULL")
                     return False
         return True
 
     def _read_mbr_in_file(self):
         fn = fns()
         if self._path == "":
-            fn.err_msg("FDISK", "No se especificó el parámetro obligatorio PATH");
+            # fn.err_msg("FDISK", "No se especificó el parámetro obligatorio PATH")
+            self.arr_output_result.append("FDISK: No se especificó el parámetro obligatorio PATH")
             return None
         if not fn.check_status_file(self._path):
-            fn.err_msg("FDISK", "El archivo no existe "+fn.RED+self._path);
+            # fn.err_msg("FDISK", "El archivo no existe "+fn.RED+self._path)
+            self.arr_output_result.append("FDISK: El archivo no existe "+self._path)
             return None
         self._tmp_mbr = MBR()
         total_bytes_to_read = struct.calcsize(self._tmp_mbr.FORMATMBR) + struct.calcsize(self._tmp_mbr.mbr_partition_1.FORMATPARTITION) * 4
@@ -195,7 +217,8 @@ class Fdisk:
         fn = fns()
        
         if self._name == None:
-            fn.err_msg("FDISK", "No se especificó el parámetro obligatorio NAME");
+            # fn.err_msg("FDISK", "No se especificó el parámetro obligatorio NAME")
+            self.arr_output_result.append("FDISK: No se especificó el parámetro obligatorio NAME")
             return None
         new_part = Partition()
         new_part.part_status = '1'
@@ -213,13 +236,15 @@ class Fdisk:
             return 'F'
         elif self._fit == "WF":
             return 'W'
-        fn.err_msg("FDISK", "El valor del parámetro FIT no es válido solo se acepta BF, FF o WF");
+        # fn.err_msg("FDISK", "El valor del parámetro FIT no es válido solo se acepta BF, FF o WF")
+        self.arr_output_result.append("FDISK: El valor del parámetro FIT no es válido solo se acepta BF, FF o WF") 
         return b'0'   
 
     def _get_value_unit_partition(self):
         fn = fns()
         if self._size == None:
-            fn.err_msg("FDISK", "No se especificó el parámetro obligatorio SIZE");
+            # fn.err_msg("FDISK", "No se especificó el parámetro obligatorio SIZE")
+            self.arr_output_result.append("FDISK: No se especificó el parámetro obligatorio SIZE")
             return 0
         if self._unit == "K":
             return 1024*self._size
@@ -227,7 +252,8 @@ class Fdisk:
             return 1024*1024 *self._size
         elif self._unit == "B":
             return self._size
-        fn.err_msg("FDISK", "El valor del parámetro UNIT no es válido solo se acepta K, M o B");
+        # fn.err_msg("FDISK", "El valor del parámetro UNIT no es válido solo se acepta K, M o B")
+        self.arr_output_result.append("FDISK: El valor del parámetro UNIT no es válido solo se acepta K, M o B")
         return 0
     
     def _check_exist_extented_partition(self, mbr):
@@ -268,10 +294,12 @@ class Fdisk:
     def _check_name_is_none(self):
         fn = fns()
         if self._size == None:
-            fn.err_msg("FDISK", "No se especificó el parámetro obligatorio SIZE");
+            # fn.err_msg("FDISK", "No se especificó el parámetro obligatorio SIZE")
+            self.arr_output_result.append("FDISK: No se especificó el parámetro obligatorio SIZE")
             return True
         if self._size < 1:
-            fn.err_msg("FDISK", "El valor del parámetro SIZE debe ser mayor a 0");
+            # fn.err_msg("FDISK", "El valor del parámetro SIZE debe ser mayor a 0")
+            self.arr_output_result.append("FDISK: El valor del parámetro SIZE debe ser mayor a 0")
             return True
         return False
     
@@ -339,7 +367,8 @@ class Fdisk:
         self._size = self._add
         self._add = self._get_value_unit_partition()
         if self._get_free_space_disk(list_partition) < self._add:
-            fn().err_msg("FDISK", "Add no hay espacio disponible en el disco "+fn().RED+self._path)
+            # fn().err_msg("FDISK", "Add no hay espacio disponible en el disco "+fn().RED+self._path)
+            self.arr_output_result.append("FDISK: Add no hay espacio disponible en el disco "+self._path)
             return False
         state = False
         for part in list_partition:
@@ -367,7 +396,8 @@ class Fdisk:
             return False
         
         if ext_partition.part_size < self._get_value_unit_partition():
-            fn().err_msg("FDISK", "No hay espacio disponible en la partición extendida "+fn().RED+self._path)
+            # fn().err_msg("FDISK", "No hay espacio disponible en la partición extendida "+fn().RED+self._path)
+            self.arr_output_result.append("FDISK: No hay espacio disponible en la partición extendida "+self._path)
             return False
         #read default ebr in extended partition
         current_ebr.deserialize_ebr(bfm(self._path).read_binary_data(ext_partition.part_start, struct.calcsize(current_ebr.FORMATEBR)))
@@ -385,17 +415,20 @@ class Fdisk:
             return True
         free_space -= current_ebr.ebr_size
         if current_ebr.ebr_name == self._name:
-                fn().err_msg("FDISK", "Ya existe una partición logica con el nombre "+fn().RED+str(self._name))
+                # fn().err_msg("FDISK", "Ya existe una partición logica con el nombre "+fn().RED+str(self._name))
+                self.arr_output_result.append("FDISK: Ya existe una partición logica con el nombre "+str(self._name))
                 return False
         while current_ebr.ebr_next != -1:
             current_ebr.deserialize_ebr(bfm(self._path).read_binary_data(current_ebr.ebr_next, struct.calcsize(current_ebr.FORMATEBR)))
             free_space -= current_ebr.ebr_size
             if current_ebr.ebr_name == self._name:
-                fn().err_msg("FDISK", "Ya existe una partición logica con el nombre "+fn().RED+str(self._name))
+                # fn().err_msg("FDISK", "Ya existe una partición logica con el nombre "+fn().RED+str(self._name))
+                self.arr_output_result.append("FDISK: Ya existe una partición logica con el nombre "+str(self._name))
                 return False
         
         if free_space < self._get_value_unit_partition():
-            fn().err_msg("FDISK", "No se puede agregar particion logica insuficiente espacio en la partición extendida "+fn().RED+self._path)
+            # fn().err_msg("FDISK", "No se puede agregar particion logica insuficiente espacio en la partición extendida "+fn().RED+self._path)
+            self.arr_output_result.append("FDISK: No se puede agregar particion logica insuficiente espacio en la partición extendida "+self._path) 
             return False
 
         current_ebr.ebr_next = current_ebr.ebr_start + current_ebr.ebr_size

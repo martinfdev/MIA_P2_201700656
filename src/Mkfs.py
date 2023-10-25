@@ -6,7 +6,8 @@ from src.Blocks import *
 from src.BinaryFileManager import BinaryFileManager as bfm
 
 class Mkfs:
-    def __init__(self, list_params) -> None:
+    def __init__(self, list_params, arr_output_result) -> None:
+        self.arr_output_result = arr_output_result
         self._list_params = list_params
         self._id = ""
         self._type = "FULL"
@@ -18,22 +19,27 @@ class Mkfs:
         if not self._set_values_props_mkfs():
             return
         if len(list_mounts) == 0:
-            fn().err_msg("MKFS", "No hay particiones montadas.")
+            # fn().err_msg("MKFS", "No hay particiones montadas.")
+            self.arr_output_result.append("No hay particiones montadas.")
             return
         if not self._check_is_mounted_partition(list_mounts):
-            fn().err_msg("MKFS", "La partición "+str(self._id)+" no está montada.")
+            # fn().err_msg("MKFS", "La partición "+str(self._id)+" no está montada.")
+            self.arr_output_result.append("La partición "+str(self._id)+" no está montada.")
             return
         
         if self._fs == "2FS":
             if not self._mkfs_2fs():
-                fn().err_msg("MKFS", "No se pudo formatear la partición "+str(self._id))
+                # fn().err_msg("MKFS", "No se pudo formatear la partición "+str(self._id))
+                self.arr_output_result.append("No se pudo formatear la partición "+str(self._id))
                 return
             
         if self._fs == "3FS":
             if not self._mkfs_3fs():
-                fn().err_msg("MKFS", "No se pudo formatear la partición "+str(self._id))
+                # fn().err_msg("MKFS", "No se pudo formatear la partición "+str(self._id))
+                self.arr_output_result.append("No se pudo formatear la partición "+str(self._id))
                 return
-        fn().success_msg("MKFS", "Se formateó la partición "+str(self._id)+" con exito.")
+        # fn().success_msg("MKFS", "Se formateó la partición "+str(self._id)+" con exito.")
+        self.arr_output_result.append("Se formateó la partición "+str(self._id)+" con exito.")
 
     def _set_values_props_mkfs(self):
         for param in self._list_params:
@@ -47,13 +53,16 @@ class Mkfs:
                     self._fs = param.value.upper()
 
         if self._id == "":
-            fn().err_msg("MKFS", "No se ha especificado el -id=? de la partición.")
+            # fn().err_msg("MKFS", "No se ha especificado el -id=? de la partición.")
+            self.arr_output_result.append("No se ha especificado el -id=? de la partición.")
             return False
         if self._type != "FULL":
-            fn().err_msg("MKFS", "El parametro de -type no es valido.")
+            # fn().err_msg("MKFS", "El parametro de -type no es valido.")
+            self.arr_output_result.append("El parametro de -type no es valido.")
             return False
         if self._fs != "2FS" and self._fs != "3FS":
-            fn().err_msg("MKFS", "El parametro de -fs no es valido.")
+            # fn().err_msg("MKFS", "El parametro de -fs no es valido.")
+            self.arr_output_result.append("El parametro de -fs no es valido.")
             return False
         return True
 
@@ -68,27 +77,33 @@ class Mkfs:
     
     def _mkfs_2fs(self):
         if self._tmp_partition == None:
-            fn().err_msg("MKFS", "No se encontró la partición "+str(self._id))
+            # fn().err_msg("MKFS", "No se encontró la partición "+str(self._id))
+            self.arr_output_result.append("No se encontró la partición "+str(self._id))
             return False
         if isinstance(self._tmp_partition, Partition):
             if str(self._tmp_partition.part_type) == "E":   
-                fn().err_msg("MKFS", "No se puede formatear una partición extendida.")
+                # fn().err_msg("MKFS", "No se puede formatear una partición extendida.")
+                self.arr_output_result.append("No se puede formatear una partición extendida.")
                 return False
         if not self._create_superblock(1):  #0 = EXT3 - 1 = EXT2   
-            fn().err_msg("MKFS", "No se pudo crear el super bloque.")
+            # fn().err_msg("MKFS", "No se pudo crear el super bloque.")
+            self.arr_output_result.append("No se pudo crear el super bloque.")
             return False
         return True
 
     def _mkfs_3fs(self):
         if self._tmp_partition == None:
-            fn().err_msg("MKFS", "No se encontró la partición "+str(self._id))
+            # fn().err_msg("MKFS", "No se encontró la partición "+str(self._id))
+            self.arr_output_result.append("No se encontró la partición "+str(self._id))
             return False
         if isinstance(self._tmp_partition, Partition):
             if str(self._tmp_partition.part_type) == "E":   
-                fn().err_msg("MKFS", "No se puede formatear una partición extendida.")
+                # fn().err_msg("MKFS", "No se puede formatear una partición extendida.")
+                self.arr_output_result.append("No se puede formatear una partición extendida.")
                 return False
         if not self._create_superblock(0):  #0 = EXT3 - 1 = EXT2   
-            fn().err_msg("MKFS", "No se pudo crear el super bloque.")
+            # fn().err_msg("MKFS", "No se pudo crear el super bloque.")
+            self.arr_output_result.append("No se pudo crear el super bloque.")
             return False
         return True
 

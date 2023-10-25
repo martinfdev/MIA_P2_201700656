@@ -12,3 +12,5 @@ parsetab.py
 *.png
 *.jpg
 *.sh
+/test
+/static/images

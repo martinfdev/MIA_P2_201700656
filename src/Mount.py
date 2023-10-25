@@ -3,7 +3,8 @@ from src.Primitive import Path, ID
 from src.UtilClass import *
 from src.BinaryFileManager import BinaryFileManager as bfm
 class Mount:
-    def __init__(self, list_params) -> None:
+    def __init__(self, list_params, arr_output_result) -> None:
+        self.arr_output_result = arr_output_result
         self._list_params = list_params
         self._path = ""
         self._file_name = ""
@@ -14,12 +15,15 @@ class Mount:
 
     def execute_mount(self):
         if not self._set_val_properties_mount(self._list_params):
-            fn().err_msg("Mount", "No se pudo montar la partición "+str(self._name))
+            # fn().err_msg("Mount", "No se pudo montar la partición "+str(self._name))
+            self.arr_output_result.append("No se pudo montar la partición "+str(self._name))
             return
         if not self._generateid():
-            fn().err_msg("Mount", "No se pudo montar la partición "+str(self._name))
+            # fn().err_msg("Mount", "No se pudo montar la partición "+str(self._name))
+            self.arr_output_result.append("No se pudo montar la partición "+str(self._name))
             return
-        fn().success_msg("Mount", "Se montó la partición "+str(self._name)+" con el id "+str(self.id))
+        # fn().success_msg("Mount", "Se montó la partición "+str(self._name)+" con el id "+str(self.id))
+        self.arr_output_result.append("Se montó la partición "+str(self._name)+" con el id "+str(self.id))
         return self
 
     #set and check properties for mount
@@ -32,10 +36,12 @@ class Mount:
                 self._name = param.get_value()
         
         if self._path == "":
-            fn().err_msg("Mount", "No se encontró el parámetro -path")
+            # fn().err_msg("Mount", "No se encontró el parámetro -path")
+            self.arr_output_result.append("No se encontró el parámetro -path")
             return False
         if self._name == "":
-            fn().err_msg("Mount", "No se encontró el parámetro -name")
+            # fn().err_msg("Mount", "No se encontró el parámetro -name")
+            self.arr_output_result.append("No se encontró el parámetro -name")
             return False
         return True
 
@@ -43,7 +49,8 @@ class Mount:
     def _generateid(self):
         tmp_mbr = MBR()
         if not fn().check_status_file(self._path):
-            fn().err_msg("Mount", "No se encontró el archivo "+self._path)
+            # fn().err_msg("Mount", "No se encontró el archivo "+self._path)
+            self.arr_output_result.append("No se encontró el archivo "+self._path)
             return False
         tmp_mbr = tmp_mbr.deserialize_mbr(bfm(self._path).read_binary_data(0, struct.calcsize(tmp_mbr.FORMATMBR)+struct.calcsize(tmp_mbr.mbr_partition_1.FORMATPARTITION)*4))
         if tmp_mbr is None:
@@ -61,7 +68,8 @@ class Mount:
                 found_partition = True
                 break
         if not found_partition:
-            fn().err_msg("Mount", "No se encontró la partición "+str(self._name))
+            # fn().err_msg("Mount", "No se encontró la partición "+str(self._name))
+            self.arr_output_result.append("No se encontró la partición "+str(self._name))
             return False    
         self.tmp_mbr = tmp_mbr
         self.id = "56"+str(num_partitions)+self._file_name.removesuffix(".dsk")

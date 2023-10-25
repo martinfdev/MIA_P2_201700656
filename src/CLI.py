@@ -121,7 +121,8 @@ def t_newline(t):
 def t_error(t):
     # error.append(Exception('Lexico', 'Error Lexico: ' +
     #              t.value[0], t.lineno, find_column(input, t)))
-    print(f'{Functions().RED}Error Lexico: {Functions().RESET}'+t.value[0]+' line: '+str(t.lineno)+' column: '+str(find_column(input, t)))
+    # print(f'{Functions().RED}Error Lexico: {Functions().RESET}'+t.value[0]+' line: '+str(t.lineno)+' column: '+str(find_column(input, t)))
+    output_result.append(f"Error Lexico: {t.value[0]} line: {str(t.lineno)} column: {str(find_column(input, t))}")
     t.lexer.skip(1)
 
 def find_column(input, token):
@@ -168,12 +169,13 @@ def p_instruction_error_0(t):
     '''
         instruction :   error
     '''
-    print(f"{Functions().RED}Error Sintáctico {Functions().RESET}" + str(t[1].value) + " line: " + str(t.lineno(1)) + " column: " + str(find_column(input, t.slice[1])))
+    # print(f"{Functions().RED}Error Sintáctico {Functions().RESET}" + str(t[1].value) + " line: " + str(t.lineno(1)) + " column: " + str(find_column(input, t.slice[1])))
+    output_result.append(f"Error Sintáctico {str(t[1].value)} line: {str(t.lineno(1))} column: {str(find_column(input, t.slice[1]))}")
     t[0] = ""
 
 def p_instruction_pause(t):
     '''instruction : PAUSE'''
-    Functions().funct_to_pause()
+    # Functions().funct_to_pause()
     t[0] = ""
 
 def p_execute_instruction(t):
@@ -183,7 +185,7 @@ def p_execute_instruction(t):
 
 def p_mkdisk_instruction(t):
     '''mkdisk_instruction  : MKDISK ls_params_mkdisk'''
-    Mkdisk(t[2]).execute_mkdisk()
+    Mkdisk(t[2], output_result).execute_mkdisk()
     t[0] = ""
 
 def p_ls_params_mkdisk(t):
@@ -204,12 +206,12 @@ def p_param_mkdisk(t):
 
 def p_rmdisk_instruction(t):
     '''rmdisk_instruction : RMDISK DASH path_eq_pathdir'''
-    Rmdisk(t[3]).execute_rmdisk()
+    Rmdisk(t[3], output_result).execute_rmdisk()
     t[0] = ""
 
 def p_fdisk_instruction(t):
     '''fdisk_instruction  : FDISK ls_params_fdisk'''
-    Fdisk(t[2]).executefdisk()
+    Fdisk(t[2], output_result).executefdisk()
     t[0] = ""
 
 def p_ls_params_fdisk(t):
@@ -234,7 +236,7 @@ def p_param_fdisk(t):
 
 def p_mount_instruction(t):
     '''mount_instruction    :   MOUNT ls_params_mount'''
-    mount = Mount(t[2]).execute_mount()
+    mount = Mount(t[2], output_result).execute_mount()
     if mount != None:
         list_mount_partition.append(mount)
     t[0] = ''
@@ -255,12 +257,12 @@ def p_param_mount(t):
 
 def p_unmount_instruction(t):
     '''unmount_instruction  :   UNMOUNT DASH id_eq_id'''
-    Unmount(t[3]).execute_unmount(list_mount_partition)
+    # Unmount(t[3]).execute_unmount(list_mount_partition)
     t[0] = ''
 
 def p_mkfs_instruction(t):
     '''mkfs_instruction : MKFS ls_params_mkfs'''
-    Mkfs(t[2]).execute_mkfs(list_mount_partition)
+    Mkfs(t[2], output_result).execute_mkfs(list_mount_partition)
     t[0] = ""
 
 def p_ls_params_mkfs(t):
@@ -397,7 +399,8 @@ def p_add_eq_intnum(t):
 def p_print_comments(t):
     '''print_comments : COMMENTUNTLINE
                       | COMMENTMULTILINE'''
-    print(f'{Functions().MAGENTA}{t[1]}{Functions().RESET}')
+    # print(f'{Functions().MAGENTA}{t[1]}{Functions().RESET}')
+    output_result.append(f"{t[1]}")
     t[0] = ""
 
 def p_id_eq_id(t):
@@ -419,25 +422,27 @@ def p_user_eq_id(t):
 def p_pwd_eq_id(t):
     '''pwd_eq_id : PASS EQUALTO IDENTIFIER'''
     t[0] = Pwd(t[3])            
-# def p_error(t):
-#     if t:
-#         print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {}".format(
-#             str(t.type), str(t.value)))
-#     else:
-#         print(Functions().RED+"Error"+Functions().RESET +" sintactico {}".format(t))
+def p_error(t):
+    if t:
+        print(Functions().RED+"Error "+Functions().RESET+"sintactico de tipo {} en el valor {} linea: {} columna: {}".format(
+            str(t.type), str(t.value), str(t.lineno), str(find_column(input, t))))
+        output_result.append(f"Error sintactico de tipo {str(t.type)} en el valor {str(t.value)} linea: {str(t.lineno)} columna: {str(find_column(input, t))}")
+    else:
+        # print(Functions().RED+"Error"+Functions().RESET +" sintactico {}".format(t))
+        output_result.append(f"Error sintactico {str(t)}")
 input = ''
 list_mount_partition = []
 def cli_command(command):
     # construct to lexer analyzer
     global input 
     global list_mount_partition
+    global output_result
     input = command
     list_mount_partition = []
+    output_result = []
     lexer = lex.lex()
     parser = yacc.yacc()
     output = parser.parse(command)
     if output == None:
-        return ""
-    elif  output == []:
-        return ""
-    else: return output[0]
+        return output_result
+    return output_result

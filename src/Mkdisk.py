@@ -3,8 +3,9 @@ from src.Functions import Functions as fns
 from src.BinaryFileManager import BinaryFileManager as bfm
 from src.UtilClass import MBR as mbr
 class Mkdisk:
-    def __init__(self, list_params) -> None:
+    def __init__(self, list_params, arr_output_result) -> None:
         self._list_params = list_params
+        self.arr_output_result = arr_output_result
         self._size = -1
         self._path = ""
         self._fit = "FF"
@@ -13,13 +14,16 @@ class Mkdisk:
 
     def execute_mkdisk(self):
         if not self._set_values():
-            fns().err_msg("MKDISK", "No se pudo crear el disco "+fns().CYAN+self._file_name)
+            # fns().err_msg("MKDISK", "No se pudo crear el disco "+fns().CYAN+self._file_name)
+            self.arr_output_result.append("MKDISK No se pudo crear el disco "+self._file_name)
             return
         if not self._create_disk():
-            fns().err_msg("MKDISK", "No se pudo crear el disco "+fns().CYAN+self._file_name)
+            # fns().err_msg("MKDISK", "No se pudo crear el disco "+fns().CYAN+self._file_name)
+            self.arr_output_result.append("MKDISK No se pudo crear el disco "+self._file_name)
             return
         if not self._write_mbr():
-            fns().err_msg("MKDISK", "No se pudo crear el disco "+fns().CYAN+self._file_name)
+            # fns().err_msg("MKDISK", "No se pudo crear el disco "+fns().CYAN+self._file_name)
+            self.arr_output_result.append("MKDISK No se pudo crear el disco "+self._file_name)
             return 
 
     def _set_values(self):
@@ -35,26 +39,32 @@ class Mkdisk:
                 self._file_name = param.filename
 
         if self._path == "":
-            fns().err_msg("MKDISK", "No se especificó el parámetro obligatorio PATH");    
+            # fns().err_msg("MKDISK", "No se especificó el parámetro obligatorio PATH");
+            self.arr_output_result.append("MKDISK No se especificó el parámetro obligatorio PATH")
             return False
         else:
             function = fns()
             if not function.check_status_folder(self._path):
                 function.create_folder(self._path, "MKDISK")
         if self._size == -1:
-            fns().err_msg("MKDISK", "No se especificó el parámetro obligatorio SIZE");
+            # fns().err_msg("MKDISK", "No se especificó el parámetro obligatorio SIZE")
+            self.arr_output_result.append("MKDISK No se especificó el parámetro obligatorio SIZE")
             return False
         if self._size == None:
-            fns().err_msg("MKDISK", "No se especificó el parámetro obligatorio SIZE");
+            # fns().err_msg("MKDISK", "No se especificó el parámetro obligatorio SIZE")
+            self.arr_output_result.append("MKDISK No se especificó el parámetro obligatorio SIZE")
             return False
         elif self._size <= 0:
-            fns().err_msg("MKDISK", "El parámetro SIZE no puede ser negativo o cero");
+            # fns().err_msg("MKDISK", "El parámetro SIZE no puede ser negativo o cero");
+            self.arr_output_result.append("MKDISK El parámetro SIZE no puede ser negativo o cero")
             return False
         if self._unit != "K" and self._unit != "M":
-            fns().err_msg("MKDISK", "El parámetro UNIT solo puede ser K o M");
+            # fns().err_msg("MKDISK", "El parámetro UNIT solo puede ser K o M");
+            self.arr_output_result.append("MKDISK El parámetro UNIT solo puede ser K o M")
             return False
         if self._fit != "BF" and self._fit != "FF" and self._fit != "WF":
-            fns().err_msg("MKDISK", "El parámetro FIT solo puede ser BF, FF o WF");
+            # fns().err_msg("MKDISK", "El parámetro FIT solo puede ser BF, FF o WF")
+            self.arr_output_result.append("MKDISK El parámetro FIT solo puede ser BF, FF o WF")
             return False
         return True
     
@@ -76,11 +86,13 @@ class Mkdisk:
         self._size = self._set_value_unit()
         if not function.check_status_file(self._path+self._file_name):
             if not bfm(self._path+self._file_name).create_file():
-                function.err_msg("MKDISK", "No se pudo crear el archivo "+function.CYAN+self._file_name)
+                # function.err_msg("MKDISK", "No se pudo crear el archivo "+function.CYAN+self._file_name)
+                self.arr_output_result.append("MKDISK No se pudo crear el archivo "+self._file_name)
                 return False
         else:
             bfm(self._path+self._file_name).create_file() 
-            function.success_msg("MKDISK", "archivo "+function.CYAN+self._file_name+function.RESET+" reescrito!")
+            # function.success_msg("MKDISK", "archivo "+function.CYAN+self._file_name+function.RESET+" reescrito!")
+            self.arr_output_result.append("MKDISK archivo "+self._file_name+" reescrito!")
         return bfm(self._path+self._file_name).fill_binary_file(self._size, 0)
     
     def _write_mbr(self):
