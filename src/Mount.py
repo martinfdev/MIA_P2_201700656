@@ -12,8 +12,10 @@ class Mount:
         self.id = ""
         self._tmp_partition = None
         self.tmp_mbr = MBR([])
+        self._tmp_list_mounts_partitions = []
 
-    def execute_mount(self):
+    def execute_mount(self, list_mounts_partitions):
+        self._tmp_list_mounts_partitions = list_mounts_partitions
         if not self._set_val_properties_mount(self._list_params):
             # fn().err_msg("Mount", "No se pudo montar la partición "+str(self._name))
             self.arr_output_result.append("No se pudo montar la partición "+str(self._name))
@@ -73,6 +75,11 @@ class Mount:
             return False    
         self.tmp_mbr = tmp_mbr
         self.id = "56"+str(num_partitions)+self._file_name.removesuffix(".dsk")
+        for mount in self._tmp_list_mounts_partitions:
+            if mount.id == self.id:
+                # fn().err_msg("Mount", "La partición "+str(self._name)+" ya está montada")
+                self.arr_output_result.append(f"La partición {self._name} con id {self.id} ya está montada")
+                return False
         return True
     
     def _find_logic_partition(self, partition):

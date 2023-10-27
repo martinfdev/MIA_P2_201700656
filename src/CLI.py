@@ -236,7 +236,7 @@ def p_param_fdisk(t):
 
 def p_mount_instruction(t):
     '''mount_instruction    :   MOUNT ls_params_mount'''
-    mount = Mount(t[2], output_result).execute_mount()
+    mount = Mount(t[2], output_result).execute_mount(list_mount_partition)
     if mount != None:
         list_mount_partition.append(mount)
     t[0] = ''
