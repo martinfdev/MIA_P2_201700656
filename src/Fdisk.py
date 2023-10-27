@@ -312,16 +312,19 @@ class Fdisk:
     
     def _set_partitition_with_best_fit(self, list_partition, new_part):
         best_fit = None
+        best_fit_index = -1
+
         for i in range(0, len(list_partition)):
             if list_partition[i].part_type == '\0':
-                if best_fit is None:
+                if best_fit is None or best_fit.part_size > list_partition[i].part_size:
                     best_fit = list_partition[i]
-                elif best_fit.part_size > list_partition[i].part_size:
-                    best_fit = list_partition[i]
-        if best_fit is None:
-            return True
-        best_fit = new_part
-        return False
+                    best_fit_index = i
+
+        if best_fit_index != -1:  
+            list_partition[best_fit_index] = new_part
+            return False
+
+        return True  # No se encontró una partición disponible.
 
     def _set_partitition_with_worst_fit(self, list_partition, new_part):
         worst_fit = None
