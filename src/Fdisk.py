@@ -133,7 +133,7 @@ class Fdisk:
                 return
             
         if self._mbr_fit == 'W':
-            value = self._set_partitition_with_worst_fit(list_partition, newpart)
+            value = self._set_partition_with_worst_fit(list_partition, newpart)
             if value:
                 # fn.err_msg("FDISK", "No se pudo agregar la partición maximo 4 particiones "+fn.RED+str(self._name))
                 self.arr_output_result.append("FDISK: No se pudo agregar la partición maximo 4 particiones "+str(self._name))
@@ -326,18 +326,20 @@ class Fdisk:
 
         return True  # No se encontró una partición disponible.
 
-    def _set_partitition_with_worst_fit(self, list_partition, new_part):
+    def _set_partition_with_worst_fit(self, list_partition, new_part):
         worst_fit = None
+        worst_fit_index = -1  
+
         for i in range(0, len(list_partition)):
             if list_partition[i].part_type == '\0':
-                if worst_fit is None:
+                if worst_fit is None or worst_fit.part_size < list_partition[i].part_size:
                     worst_fit = list_partition[i]
-                elif worst_fit.part_size < list_partition[i].part_size:
-                    worst_fit = list_partition[i]
-        if worst_fit is None:
-            return True
-        worst_fit = new_part
-        return False
+                    worst_fit_index = i
+        if worst_fit_index != -1:
+            list_partition[worst_fit_index] = new_part
+            return False
+        return True
+
 
     def _delete_partition(self, list_partition):
         state = False
