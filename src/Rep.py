@@ -200,6 +200,7 @@ class REP:
                     </TABLE>>''', shape="none")
         digraph.render(filename=self.file_name,
                        directory=self.output_path_folder)
+        self.arr_output_result.append(f"REP: Se generó el reporte MBR con nombre {self.file_name}")
 
     def _create_directory(self):
         if not fn(self.arr_output_result).check_status_folder(self.output_path_folder):
@@ -280,6 +281,7 @@ class REP:
 
         digraph.render(filename=self.file_name,
                        directory=self.output_path_folder)
+        self.arr_output_result.append(f"REP: Se generó el reporte DISK con nombre {self.file_name}")
 
     def _rep_bm_inode(self):
         if self._tmp_partition is None:
@@ -322,6 +324,7 @@ class REP:
                     {label}
                     </TABLE>>''', shape="none")
         graph.render(filename=self.file_name, directory=self.output_path_folder)
+        self.arr_output_result.append(f"REP: Se generó el reporte de Inodo con nombre {self.file_name}")
         
 
     def _rep_block(self):
@@ -418,4 +421,4 @@ class REP:
                     </TABLE>>''', shape="none")
         graph.render(filename=self.file_name,
                      directory=self.output_path_folder)
-
+        self.arr_output_result.append(f"REP: Se generó el reporte de Bloque con nombre {self.file_name}")
