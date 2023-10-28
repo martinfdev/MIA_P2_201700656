@@ -36,6 +36,7 @@ function Home() {
     const handleCleanTextArea = () => {
         setFileContent("")
         setOutput("Salida>>")
+        window.location.reload(false)
     }
 
 
