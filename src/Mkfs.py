@@ -34,6 +34,8 @@ class Mkfs:
                 return
             
         if self._fs == "3FS":
+            self.arr_output_result.append("Error no se permite 3fs")
+            return
             if not self._mkfs_3fs():
                 # fn().err_msg("MKFS", "No se pudo formatear la partición "+str(self._id))
                 self.arr_output_result.append("No se pudo formatear la partición "+str(self._id))
