@@ -9,6 +9,10 @@ function Login() {
         navigate('/reports')
     }
 
+    const handleBack = () => {
+        navigate('/home')
+    }
+
     return (
         <div className="flex h-screen justify-center items-center">
             <div className="flex flex-col items-center justify-center gap-14 rounded-md bg-slate-600 w-auto h-auto p-10">
@@ -32,6 +36,9 @@ function Login() {
                 onClick={handleReports}
                 >Ingresar</button>
             </div>
+            <button className="absolute top-5 right-5 p-3 rounded-md text-slate-900 font-bold bg-slate-200 border-4 hover:border-primary bg-opacity-50 hover:bg-opacity-100"
+            onClick={handleBack}
+            >Regresar</button>
         </div>
     )
 }
