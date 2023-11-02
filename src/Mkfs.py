@@ -178,7 +178,6 @@ class Mkfs:
         bf.write_binary_data(first_block.serialize_block_folder(), pos_init_value["block"])
         return True
 
-
     def _first_pos(self, value_n, part_start, size_ebr=0):
         init_pos_value = {"super_block":0, "bitmap_inode": 0, "bitmap_block": 0, "inode": 0, "block": 0}
         init_pos_value["super_block"] = part_start+size_ebr
