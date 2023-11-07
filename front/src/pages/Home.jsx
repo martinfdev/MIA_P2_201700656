@@ -14,7 +14,7 @@ function Home() {
     }
 
     const handleOutputChange = () => {
-        fetch('http://localhost:5000/execute', {
+        fetch('http://3.89.186.159:5000/execute', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -36,7 +36,7 @@ function Home() {
     const handleCleanTextArea = () => {
         setFileContent("")
         setOutput("Salida>>")
-        window.location.reload(false)
+        // window.location.reload(false)
     }
 
 
